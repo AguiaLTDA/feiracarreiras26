@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feira de Carreiras UNIVC 2026 — Seahaven UNIVC</title>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Header Banner -->
+  <header class="header-banner">
+    <div class="header-container">
+      <div class="brand-badge">
+        <div class="logo-icon">U</div>
+        <div class="brand-text">
+          <h1>Feira de Carreiras UNIVC</h1>
+          <div class="subtitle">Seahaven UNIVC — O Último Episódio</div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 0.75rem; align-items: center;">
+        <div class="event-date-pill">
+          <i class="fa-solid fa-calendar-day"></i> 12 de Agosto de 2026
+        </div>
+        <button id="btn-toggle-sound" class="btn-secondary" title="Alternar Som" style="padding: 0.4rem 0.8rem;">
+          <i class="fa-solid fa-volume-high" id="sound-icon"></i>
+        </button>
+        <button id="btn-telao-header" class="btn-lime" style="padding: 0.4rem 0.9rem; font-size: 0.85rem;">
+          <i class="fa-solid fa-tv"></i> Modo Telão
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="nav-tabs-wrapper">
+    <div class="nav-tabs">
+      <button class="tab-btn active" data-tab="cadastro">
+        <i class="fa-solid fa-id-card"></i> 1. Cadastro <span class="badge-count" id="badge-user-status">Incompleto</span>
+      </button>
+      <button class="tab-btn" data-tab="estacoes">
+        <i class="fa-solid fa-cubes-stacked"></i> 2. Estações de Desafio <span class="badge-count" id="badge-stations-done">0/10</span>
+      </button>
+      <button class="tab-btn" data-tab="senha">
+        <i class="fa-solid fa-key"></i> 3. Desafio da Cúpula <span class="badge-count" id="badge-fragments-count">0/10</span>
+      </button>
+      <button class="tab-btn" data-tab="ranking">
+        <i class="fa-solid fa-trophy"></i> 4. Ranking Ao Vivo <span class="badge-count" id="badge-ranking-pos">#--</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Screen 1: Cadastro -->
+    <section id="view-cadastro" class="view-section active">
+      <div class="hero-box">
+        <h2>Bem-vindo a Seahaven UNIVC: O Último Episódio</h2>
+        <p>
+          Truman Burbank levou 30 anos para descobrir que vivia dentro de um estúdio. Vocês têm apenas algumas horas! 
+          Ao percorrer as <strong>10 estações físicas do campus UNIVC</strong> (Auditório, NPJ, Clínica-Escola, Semiologia, Radiologia, Clínica Odontológica, Quadra, Lab Tech, Clínica Veterinária e Engenharias), 
+          você e sua equipe deverão usar o conhecimento real de cada profissão para identificar as falhas do cenário, coletar os 10 fragmentos da frase de despedida e abrir a porta de saída da cúpula.
+        </p>
+        <div class="hero-tags">
+          <span class="hero-tag"><i class="fa-solid fa-graduation-cap"></i> 10 Estações do Campus</span>
+          <span class="hero-tag"><i class="fa-solid fa-puzzle-piece"></i> 10 Fragmentos de Senha</span>
+          <span class="hero-tag"><i class="fa-solid fa-award"></i> Ranking Gamificado</span>
+        </div>
+      </div>
+
+      <div class="card-grid">
+        <!-- Form -->
+        <div class="custom-card">
+          <h3><i class="fa-solid fa-user-plus"></i> Registrar Aluno / Equipe</h3>
+          <form id="form-registration">
+            <div class="form-group">
+              <label for="input-student-name">Seu Nome Completo:</label>
+              <input type="text" id="input-student-name" class="form-control" placeholder="Ex: Felipe Silva" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="input-team-name">Nome da Sua Equipe:</label>
+              <input type="text" id="input-team-name" class="form-control" placeholder="Ex: Truman 360" required>
+            </div>
+
+            <div class="form-group">
+              <label for="input-school">Sua Escola / Colégio de Origem:</label>
+              <select id="input-school" class="form-control" required>
+                <option value="">Selecione sua escola...</option>
+                <option value="Colégio Cricaré">Colégio Cricaré</option>
+                <option value="E.E.E.F.M. Polivalente">E.E.E.F.M. Polivalente</option>
+                <option value="Colégio Aracruz">Colégio Aracruz</option>
+                <option value="E.E.E.M. Cricaré">E.E.E.M. Cricaré</option>
+                <option value="Escola Estadual São Mateus">Escola Estadual São Mateus</option>
+                <option value="Instituto Federal (IFES)">Instituto Federal (IFES)</option>
+                <option value="Outra Escola visitante">Outra Escola visitante</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="select-avatar">Escolha um Avatar:</label>
+              <select id="select-avatar" class="form-control">
+                <option value="🚀">🚀 Foguete</option>
+                <option value="⚡">⚡ Raio</option>
+                <option value="🧠">🧠 Mente</option>
+                <option value="🔬">🔬 Ciência</option>
+                <option value="🔥">🔥 Fogo</option>
+                <option value="💡">💡 Ideia</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn-primary mt-2">
+              <i class="fa-solid fa-circle-check"></i> Iniciar Trilha e Gerar Crachá
+            </button>
+          </form>
+        </div>
+
+        <!-- Student Badge Preview -->
+        <div class="custom-card" style="background: transparent; border: none; padding: 0; box-shadow: none;">
+          <div class="badge-preview">
+            <div class="badge-header">
+              <div>
+                <strong style="display: block; font-family: var(--font-heading); font-size: 1.1rem;">CRACHÁ DE ELENCO SEAHAVEN</strong>
+                <small style="opacity: 0.8;">UNIVC FEIRA DE CARREIRAS 2026</small>
+              </div>
+              <span class="badge-tag">PROTAGONISTA</span>
+            </div>
+            
+            <div class="badge-body">
+              <div class="avatar-display" id="badge-avatar-display">🚀</div>
+              <div class="badge-info">
+                <h4 id="badge-student-name">Nome do Aluno</h4>
+                <p id="badge-team-name"><i class="fa-solid fa-users"></i> Equipe: Não cadastrada</p>
+                <p id="badge-school-name" style="color: var(--univc-lime-bright); font-weight: 700;"><i class="fa-solid fa-school"></i> Escola: --</p>
+              </div>
+            </div>
+
+            <div class="badge-qr-box">
+              <div>
+                <small style="display: block; font-weight: bold; color: var(--text-muted);">CÓDIGO DE CREDENCIAMENTO</small>
+                <strong id="badge-id-code" style="font-family: monospace; font-size: 1.1rem; color: var(--univc-emerald-dark);">#UNIVC-2026-0000</strong>
+              </div>
+              <div class="qr-code-dummy">
+                <i class="fa-solid fa-qrcode fa-2x"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Screen 2: Estações de Desafio -->
+    <section id="view-estacoes" class="view-section">
+      <!-- Hanging Banners from Image 2 -->
+      <div class="hanging-banners-container">
+        <div class="hanging-banner">
+          <span class="banner-area-tag"><i class="fa-solid fa-heart-pulse"></i> ESTAÇÃO SAÚDE</span>
+          <p>"Cuidar de pessoas é transformar vidas todos os dias."</p>
+          <small style="display: block; margin-top: 0.5rem; color: var(--univc-lime-bright); font-weight: 700;">Clínica-Escola, Semiologia, Odontológica, Quadra, Clínica Veterinária</small>
+        </div>
+        <div class="hanging-banner">
+          <span class="banner-area-tag"><i class="fa-solid fa-briefcase"></i> ESTAÇÃO NEGÓCIOS</span>
+          <p>"Grandes ideias movem negócios e constroem o futuro."</p>
+          <small style="display: block; margin-top: 0.5rem; color: var(--univc-lime-bright); font-weight: 700;">Auditório Principal, NPJ (Práticas Jurídicas)</small>
+        </div>
+        <div class="hanging-banner">
+          <span class="banner-area-tag"><i class="fa-solid fa-laptop-code"></i> ESTAÇÃO TECNOLOGIA</span>
+          <p>"Inovar hoje é construir soluções para um amanhã melhor."</p>
+          <small style="display: block; margin-top: 0.5rem; color: var(--univc-lime-bright); font-weight: 700;">Lab Tech (Sistemas), Lab de Radiologia, Lab de Engenharias</small>
+        </div>
+      </div>
+
+      <div class="flex-between" style="flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+        <div>
+          <h2 style="font-family: var(--font-heading); font-size: 1.8rem; color: var(--univc-emerald-dark);">
+            <i class="fa-solid fa-map-location-dot"></i> 10 Estações do Campus UNIVC
+          </h2>
+          <p style="color: var(--text-muted); font-weight: 600;">Selecione a estação em que sua equipe está localizada para resolver o desafio profissional.</p>
+        </div>
+        
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn-secondary filter-area-btn active" data-area="ALL">Todas</button>
+          <button class="btn-secondary filter-area-btn" data-area="SAÚDE">Saúde</button>
+          <button class="btn-secondary filter-area-btn" data-area="NEGÓCIOS">Negócios</button>
+          <button class="btn-secondary filter-area-btn" data-area="TECNOLOGIA">Tecnologia</button>
+        </div>
+      </div>
+
+      <!-- Stations Cards Grid -->
+      <div id="grid-stations" class="stations-grid">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+    <!-- Screen 3: Desafio da Cúpula / Senha Final -->
+    <section id="view-senha" class="view-section">
+      <div class="hero-box">
+        <h2><i class="fa-solid fa-door-open"></i> O Desafio da Cúpula: A Senha de Truman</h2>
+        <p>
+          Christof está no alto da torre de controle tentando convencê-lo a ficar. Para destravar a porta de saída da cúpula e 
+          acessar o campus real da UNIVC, você precisa organizar os 10 fragmentos coletados nas 10 estações do circuito.
+        </p>
+      </div>
+
+      <!-- Fragments Inventory -->
+      <div class="fragments-inventory">
+        <div class="flex-between">
+          <h3 style="font-family: var(--font-heading); color: var(--univc-emerald-dark);"><i class="fa-solid fa-layer-group"></i> Inventário de Fragmentos Coletados</h3>
+          <span id="label-fragments-progress" style="font-weight: 800; color: var(--univc-emerald-mid);">0 / 10 Desbloqueados</span>
+        </div>
+        <div id="container-unlocked-words" class="fragments-flex">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- Assembly Box -->
+      <h3 style="font-family: var(--font-heading); color: var(--univc-emerald-dark); margin-bottom: 0.75rem;">
+        <i class="fa-solid fa-arrow-down-short-wide"></i> Monte a Frase da Senha Aqui (Clique nos fragmentos acima):
+      </h3>
+      <div id="area-sentence-assembly" class="sentence-assembly-area">
+        <div id="placeholder-text-assembly" style="color: rgba(255,255,255,0.4); font-weight: 600; width: 100%; text-align: center; padding-top: 2rem;">
+          Clique nas palavras acima para adicioná-las na frase...
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+        <button id="btn-clear-sentence" class="btn-secondary">
+          <i class="fa-solid fa-rotate-left"></i> Limpar Frase
+        </button>
+        <button id="btn-verify-password" class="btn-lime" style="padding: 0.9rem 2rem; font-size: 1.1rem;">
+          <i class="fa-solid fa-lock-open"></i> Testar Senha da Cúpula
+        </button>
+      </div>
+
+      <!-- Celebration Box when unlocked -->
+      <div id="dome-door-unlocked" class="dome-door-unlocked">
+        <i class="fa-solid fa-door-open fa-4x" style="color: var(--univc-lime-bright); margin-bottom: 1rem;"></i>
+        <h2 style="font-family: var(--font-heading); font-size: 2.2rem; margin-bottom: 0.5rem;">A PORTA DA CÚPULA SE ABRIU!</h2>
+        <p style="font-size: 1.3rem; max-width: 800px; margin: 0 auto 1.5rem auto; font-family: var(--font-heading); font-weight: 800; color: var(--univc-lime-bright);">
+          "CASO EU NÃO OS VEJA MAIS: BOM DIA E BOA NOITE!"
+        </p>
+        <p style="font-size: 1rem; opacity: 0.95;">
+          Parabéns! Sua equipe desvendou a ilusão de Seahaven e conquistou <strong>+500 Pontos Bônus</strong> no Ranking da Feira de Carreiras UNIVC!
+        </p>
+      </div>
+    </section>
+
+    <!-- Screen 4: Ranking Gamificado -->
+    <section id="view-ranking" class="view-section">
+      <div class="flex-between" style="flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+        <div>
+          <h2 style="font-family: var(--font-heading); font-size: 2rem; color: var(--univc-emerald-dark);">
+            <i class="fa-solid fa-trophy"></i> Ranking Geral — Feira de Carreiras 2026
+          </h2>
+          <p style="color: var(--text-muted); font-weight: 600;">Classificação das equipes de alunos visitantes em tempo real.</p>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+          <button id="btn-simulate-points" class="btn-secondary" title="Simular pontuação de concorrentes">
+            <i class="fa-solid fa-bolt"></i> Simular Updates Ao Vivo
+          </button>
+          <button id="btn-open-telao" class="btn-lime">
+            <i class="fa-solid fa-tv"></i> Abrir Modo Telão Auditório
+          </button>
+        </div>
+      </div>
+
+      <!-- Leaderboard Podium (1st, 2nd, 3rd) -->
+      <div id="podium-container" class="leaderboard-podium">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Ranking Table Controls -->
+      <div class="custom-card" style="margin-bottom: 1.5rem; padding: 1.25rem;">
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+          <div style="display: flex; gap: 0.75rem; align-items: center; flex: 1; min-width: 280px;">
+            <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted);"></i>
+            <input type="text" id="search-ranking" class="form-control" placeholder="Buscar por equipe ou aluno...">
+          </div>
+          <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <label for="filter-school-ranking" style="font-weight: 700; font-size: 0.9rem;">Escola:</label>
+            <select id="filter-school-ranking" class="form-control" style="width: auto;">
+              <option value="ALL">Todas as Escolas</option>
+              <option value="Colégio Cricaré">Colégio Cricaré</option>
+              <option value="E.E.E.F.M. Polivalente">E.E.E.F.M. Polivalente</option>
+              <option value="Colégio Aracruz">Colégio Aracruz</option>
+              <option value="E.E.E.M. Cricaré">E.E.E.M. Cricaré</option>
+              <option value="Escola Estadual São Mateus">Escola Estadual São Mateus</option>
+              <option value="Instituto Federal (IFES)">Instituto Federal (IFES)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ranking Table -->
+      <div class="ranking-table-container">
+        <table class="ranking-table">
+          <thead>
+            <tr>
+              <th>Posição</th>
+              <th>Equipe / Aluno</th>
+              <th>Escola</th>
+              <th>Estações</th>
+              <th>Fragmentos</th>
+              <th>Senha Final</th>
+              <th>Pontuação</th>
+            </tr>
+          </thead>
+          <tbody id="table-ranking-body">
+            <!-- Rendered via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: 1.5rem; text-align: right;">
+        <button id="btn-reset-data" class="btn-secondary" style="font-size: 0.85rem; color: #ef4444;">
+          <i class="fa-solid fa-trash-can"></i> Reiniciar Dados do Protótipo
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Telão Auditório Container (Projeção Auditório UNIVC) -->
+  <div class="telao-container">
+    <div class="telao-header">
+      <div class="telao-title">
+        <h1><span class="live-dot"></span> LEADERBOARD AO VIVO — UNIVC 2026</h1>
+        <p style="color: var(--univc-lime-bright); font-size: 1.4rem; font-weight: 700;">SEAHAVEN UNIVC: O ÚLTIMO EPISÓDIO</p>
+      </div>
+      <div>
+        <button id="btn-exit-telao" class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid white;">
+          <i class="fa-solid fa-xmark"></i> Sair do Modo Telão
+        </button>
+      </div>
+    </div>
+
+    <!-- Telão Podium -->
+    <div id="telao-podium-container" class="telao-podium">
+      <!-- Rendered via JS -->
+    </div>
+
+    <!-- Telão Table -->
+    <table class="telao-table">
+      <thead>
+        <tr style="color: var(--univc-lime-bright); text-transform: uppercase; font-family: var(--font-heading); font-size: 1.1rem;">
+          <th style="text-align: left; padding-left: 1.75rem;">Pos</th>
+          <th style="text-align: left;">Equipe</th>
+          <th style="text-align: left;">Escola</th>
+          <th style="text-align: center;">Estações Concluídas</th>
+          <th style="text-align: right; padding-right: 1.75rem;">Pontos Totais</th>
+        </tr>
+      </thead>
+      <tbody id="telao-table-body">
+        <!-- Rendered via JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Challenge Modal -->
+  <div id="modal-challenge" class="modal-backdrop">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div>
+          <span id="modal-station-code" class="station-code">EST-01</span>
+          <h3 id="modal-station-title" style="display: inline-block; margin-left: 0.5rem;">Título da Estação</h3>
+        </div>
+        <button id="btn-close-modal" class="btn-close">&times;</button>
+      </div>
+
+      <div style="background: rgba(6, 78, 59, 0.08); padding: 0.6rem 1rem; border-radius: 8px; font-weight: 700; color: var(--univc-emerald-dark); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fa-solid fa-location-dot" style="color: var(--univc-lime-bright);"></i> Local Físico: <span id="modal-station-location" style="color: var(--univc-emerald-mid);">Auditório Principal</span>
+      </div>
+
+      <div class="christof-narrative-box">
+        <div class="christof-label"><i class="fa-solid fa-bullhorn"></i> Transmissão de Christof (Diretor de Seahaven):</div>
+        <p id="modal-narrative-text" style="font-size: 0.95rem; line-height: 1.5; font-style: italic;">
+          Narrativa de Christof...
+        </p>
+      </div>
+
+      <h4 id="modal-challenge-title" style="font-family: var(--font-heading); color: var(--univc-emerald-dark); margin-bottom: 0.5rem;">
+        Desafio Técnico Profissional
+      </h4>
+      <p id="modal-question-text" style="font-weight: 700; font-size: 1rem; color: var(--text-dark); margin-bottom: 1rem;">
+        Pergunta do desafio...
+      </p>
+
+      <div id="modal-options-container" class="options-list">
+        <!-- Options rendered via JS -->
+      </div>
+
+      <div id="modal-feedback-box" style="margin-top: 1.25rem; display: none; padding: 1rem; border-radius: 12px;">
+        <!-- Feedback rendered via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
