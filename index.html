@@ -64,7 +64,7 @@
         <p>
           Truman Burbank levou 30 anos para descobrir que vivia dentro de um estúdio. Vocês têm apenas algumas horas! 
           Ao percorrer as <strong>10 estações físicas do campus UNIVC</strong> (Auditório, NPJ, Clínica-Escola, Semiologia, Radiologia, Clínica Odontológica, Quadra, Lab Tech, Clínica Veterinária e Engenharias), 
-          você e sua equipe deverão usar o conhecimento real de cada profissão para identificar as falhas do cenário, coletar os 10 fragmentos da frase de despedida e abrir a porta de saída da cúpula.
+          você usará o conhecimento real de cada profissão para identificar as falhas do cenário, coletar os 10 fragmentos da frase de despedida e abrir a porta de saída da cúpula.
         </p>
         <div class="hero-tags">
           <span class="hero-tag"><i class="fa-solid fa-graduation-cap"></i> 10 Estações do Campus</span>
@@ -76,24 +76,29 @@
       <div class="card-grid">
         <!-- Form -->
         <div class="custom-card">
-          <h3><i class="fa-solid fa-user-plus"></i> Registrar Aluno / Equipe</h3>
+          <h3><i class="fa-solid fa-user-plus"></i> Registrar Aluno</h3>
           <form id="form-registration">
             <div class="form-group">
               <label for="input-student-name">Seu Nome Completo:</label>
-              <input type="text" id="input-student-name" class="form-control" placeholder="Ex: Felipe Silva" required>
+              <input type="text" id="input-student-name" class="form-control" placeholder="Ex: Felipe Oliveira" required>
             </div>
             
             <div class="form-group">
-              <label for="input-team-name">Nome da Sua Equipe:</label>
-              <input type="text" id="input-team-name" class="form-control" placeholder="Ex: Truman 360" required>
+              <label for="input-whatsapp"><i class="fa-brands fa-whatsapp" style="color: #22c55e;"></i> WhatsApp / Celular:</label>
+              <input type="tel" id="input-whatsapp" class="form-control" placeholder="(27) 99999-9999" required>
             </div>
 
             <div class="form-group">
               <label for="input-school">Sua Escola / Colégio de Origem:</label>
               <select id="input-school" class="form-control" required>
                 <option value="">Selecione sua escola...</option>
-                <option value="Colégio Cricaré">Colégio Cricaré</option>
-                <option value="E.E.E.F.M. Polivalente">E.E.E.F.M. Polivalente</option>
+                <option value="Pedro Paulo Grobério (Jaguaré)">Pedro Paulo Grobério (Jaguaré)</option>
+                <option value="Escola Irmã Tereza (Jaguaré)">Escola Irmã Tereza (Jaguaré)</option>
+                <option value="Nossa Senhora de Lourdes (Pinheiros)">Nossa Senhora de Lourdes (Pinheiros)</option>
+                <option value="Manoel Duarte da Cunha (Pedro Canário)">Manoel Duarte da Cunha (Pedro Canário)</option>
+                <option value="Escola Edward (Pedro Canário)">Escola Edward (Pedro Canário)</option>
+                <option value="Colégio Cricaré (São Mateus)">Colégio Cricaré (São Mateus)</option>
+                <option value="E.E.E.F.M. Polivalente (São Mateus)">E.E.E.F.M. Polivalente (São Mateus)</option>
                 <option value="Colégio Aracruz">Colégio Aracruz</option>
                 <option value="E.E.E.M. Cricaré">E.E.E.M. Cricaré</option>
                 <option value="Escola Estadual São Mateus">Escola Estadual São Mateus</option>
@@ -103,14 +108,24 @@
             </div>
 
             <div class="form-group">
-              <label for="select-avatar">Escolha um Avatar:</label>
-              <select id="select-avatar" class="form-control">
-                <option value="🚀">🚀 Foguete</option>
-                <option value="⚡">⚡ Raio</option>
-                <option value="🧠">🧠 Mente</option>
-                <option value="🔬">🔬 Ciência</option>
-                <option value="🔥">🔥 Fogo</option>
-                <option value="💡">💡 Ideia</option>
+              <label for="select-course">Curso de Preferência:</label>
+              <select id="select-course" class="form-control" required>
+                <option value="">Selecione seu curso de preferência...</option>
+                <option value="Administração">Administração</option>
+                <option value="Análise e Dev. de Sistemas (ADS)">Análise e Dev. de Sistemas (ADS)</option>
+                <option value="Arquitetura e Urbanismo">Arquitetura e Urbanismo</option>
+                <option value="Ciências Contábeis">Ciências Contábeis</option>
+                <option value="Direito">Direito</option>
+                <option value="Educação Física">Educação Física</option>
+                <option value="Enfermagem">Enfermagem</option>
+                <option value="Engenharia Mecânica / Produção">Engenharia Mecânica / Produção</option>
+                <option value="Farmácia">Farmácia</option>
+                <option value="Fisioterapia">Fisioterapia</option>
+                <option value="Medicina Veterinária / Agronomia">Medicina Veterinária / Agronomia</option>
+                <option value="Odontologia">Odontologia</option>
+                <option value="Psicologia">Psicologia</option>
+                <option value="Publicidade e Propaganda">Publicidade e Propaganda</option>
+                <option value="Radiologia / Imagem">Radiologia / Imagem</option>
               </select>
             </div>
 
@@ -132,11 +147,12 @@
             </div>
             
             <div class="badge-body">
-              <div class="avatar-display" id="badge-avatar-display">🚀</div>
+              <div class="avatar-display" id="badge-avatar-display">🎓</div>
               <div class="badge-info">
                 <h4 id="badge-student-name">Nome do Aluno</h4>
-                <p id="badge-team-name"><i class="fa-solid fa-users"></i> Equipe: Não cadastrada</p>
+                <p id="badge-preferred-course"><i class="fa-solid fa-graduation-cap"></i> Curso: --</p>
                 <p id="badge-school-name" style="color: var(--univc-lime-bright); font-weight: 700;"><i class="fa-solid fa-school"></i> Escola: --</p>
+                <p id="badge-whatsapp" style="font-size: 0.8rem; opacity: 0.85; margin-top: 0.2rem;"><i class="fa-brands fa-whatsapp"></i> WhatsApp: --</p>
               </div>
             </div>
 
@@ -180,7 +196,7 @@
           <h2 style="font-family: var(--font-heading); font-size: 1.8rem; color: var(--univc-emerald-dark);">
             <i class="fa-solid fa-map-location-dot"></i> 10 Estações do Campus UNIVC
           </h2>
-          <p style="color: var(--text-muted); font-weight: 600;">Selecione a estação em que sua equipe está localizada para resolver o desafio profissional.</p>
+          <p style="color: var(--text-muted); font-weight: 600;">Selecione a estação em que você está localizado para resolver o desafio profissional.</p>
         </div>
         
         <div style="display: flex; gap: 0.5rem;">
@@ -245,7 +261,7 @@
           "CASO EU NÃO OS VEJA MAIS: BOM DIA E BOA NOITE!"
         </p>
         <p style="font-size: 1rem; opacity: 0.95;">
-          Parabéns! Sua equipe desvendou a ilusão de Seahaven e conquistou <strong>+500 Pontos Bônus</strong> no Ranking da Feira de Carreiras UNIVC!
+          Parabéns! Você desvendou a ilusão de Seahaven e conquistou <strong>+500 Pontos Bônus</strong> no Ranking da Feira de Carreiras UNIVC!
         </p>
       </div>
     </section>
@@ -257,7 +273,7 @@
           <h2 style="font-family: var(--font-heading); font-size: 2rem; color: var(--univc-emerald-dark);">
             <i class="fa-solid fa-trophy"></i> Ranking Geral — Feira de Carreiras 2026
           </h2>
-          <p style="color: var(--text-muted); font-weight: 600;">Classificação das equipes de alunos visitantes em tempo real.</p>
+          <p style="color: var(--text-muted); font-weight: 600;">Classificação dos alunos visitantes em tempo real.</p>
         </div>
 
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
@@ -280,14 +296,19 @@
         <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; justify-content: space-between;">
           <div style="display: flex; gap: 0.75rem; align-items: center; flex: 1; min-width: 280px;">
             <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted);"></i>
-            <input type="text" id="search-ranking" class="form-control" placeholder="Buscar por equipe ou aluno...">
+            <input type="text" id="search-ranking" class="form-control" placeholder="Buscar por aluno ou escola...">
           </div>
           <div style="display: flex; gap: 0.75rem; align-items: center;">
             <label for="filter-school-ranking" style="font-weight: 700; font-size: 0.9rem;">Escola:</label>
             <select id="filter-school-ranking" class="form-control" style="width: auto;">
               <option value="ALL">Todas as Escolas</option>
-              <option value="Colégio Cricaré">Colégio Cricaré</option>
-              <option value="E.E.E.F.M. Polivalente">E.E.E.F.M. Polivalente</option>
+              <option value="Pedro Paulo Grobério (Jaguaré)">Pedro Paulo Grobério (Jaguaré)</option>
+              <option value="Escola Irmã Tereza (Jaguaré)">Escola Irmã Tereza (Jaguaré)</option>
+              <option value="Nossa Senhora de Lourdes (Pinheiros)">Nossa Senhora de Lourdes (Pinheiros)</option>
+              <option value="Manoel Duarte da Cunha (Pedro Canário)">Manoel Duarte da Cunha (Pedro Canário)</option>
+              <option value="Escola Edward (Pedro Canário)">Escola Edward (Pedro Canário)</option>
+              <option value="Colégio Cricaré (São Mateus)">Colégio Cricaré (São Mateus)</option>
+              <option value="E.E.E.F.M. Polivalente (São Mateus)">E.E.E.F.M. Polivalente (São Mateus)</option>
               <option value="Colégio Aracruz">Colégio Aracruz</option>
               <option value="E.E.E.M. Cricaré">E.E.E.M. Cricaré</option>
               <option value="Escola Estadual São Mateus">Escola Estadual São Mateus</option>
@@ -303,8 +324,8 @@
           <thead>
             <tr>
               <th>Posição</th>
-              <th>Equipe / Aluno</th>
-              <th>Escola</th>
+              <th>Aluno / Curso Pretendido</th>
+              <th>Escola de Origem</th>
               <th>Estações</th>
               <th>Fragmentos</th>
               <th>Senha Final</th>
@@ -349,7 +370,7 @@
       <thead>
         <tr style="color: var(--univc-lime-bright); text-transform: uppercase; font-family: var(--font-heading); font-size: 1.1rem;">
           <th style="text-align: left; padding-left: 1.75rem;">Pos</th>
-          <th style="text-align: left;">Equipe</th>
+          <th style="text-align: left;">Aluno / Curso Pretendido</th>
           <th style="text-align: left;">Escola</th>
           <th style="text-align: center;">Estações Concluídas</th>
           <th style="text-align: right; padding-right: 1.75rem;">Pontos Totais</th>

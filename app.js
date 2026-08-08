@@ -48,11 +48,12 @@ class App {
       this.currentStudent = JSON.parse(savedStudent);
     } else {
       this.currentStudent = {
-        id: 'team-user-' + Date.now(),
+        id: 'student-user-' + Date.now(),
         name: 'Aluno Visitante',
-        teamName: 'Equipe Protagonista',
-        school: 'Colégio Cricaré',
-        avatar: '🚀',
+        whatsapp: '(27) 99999-9999',
+        school: 'Pedro Paulo Grobério (Jaguaré)',
+        preferredCourse: 'Análise e Dev. de Sistemas (ADS)',
+        avatar: '🎓',
         completedStations: [],
         unlockedFragments: [],
         solvedFinalPuzzle: false,
@@ -87,9 +88,9 @@ class App {
   updateUserInTeams() {
     const idx = this.teams.findIndex(t => t.id === this.currentStudent.id);
     if (idx >= 0) {
-      this.teams[idx] = { ...this.currentStudent, name: this.currentStudent.teamName };
+      this.teams[idx] = { ...this.currentStudent };
     } else {
-      this.teams.push({ ...this.currentStudent, name: this.currentStudent.teamName });
+      this.teams.push({ ...this.currentStudent });
     }
     this.saveTeams();
   }
@@ -205,16 +206,17 @@ class App {
 
   handleRegistration() {
     const studentName = document.getElementById('input-student-name').value.trim();
-    const teamName = document.getElementById('input-team-name').value.trim();
+    const whatsapp = document.getElementById('input-whatsapp').value.trim();
     const school = document.getElementById('input-school').value;
-    const avatar = document.getElementById('select-avatar').value;
+    const preferredCourse = document.getElementById('select-course').value;
 
-    if (!studentName || !teamName || !school) return;
+    if (!studentName || !whatsapp || !school || !preferredCourse) return;
 
     this.currentStudent.name = studentName;
-    this.currentStudent.teamName = teamName;
+    this.currentStudent.whatsapp = whatsapp;
     this.currentStudent.school = school;
-    this.currentStudent.avatar = avatar;
+    this.currentStudent.preferredCourse = preferredCourse;
+    this.currentStudent.avatar = '🎓';
 
     this.saveStudent();
     this.renderBadge();
@@ -229,9 +231,10 @@ class App {
   renderBadge() {
     if (!this.currentStudent) return;
     document.getElementById('badge-student-name').textContent = this.currentStudent.name || 'Nome do Aluno';
-    document.getElementById('badge-team-name').innerHTML = `<i class="fa-solid fa-users"></i> Equipe: ${this.currentStudent.teamName || 'Não cadastrada'}`;
+    document.getElementById('badge-preferred-course').innerHTML = `<i class="fa-solid fa-graduation-cap"></i> Curso: ${this.currentStudent.preferredCourse || 'Não informado'}`;
     document.getElementById('badge-school-name').innerHTML = `<i class="fa-solid fa-school"></i> Escola: ${this.currentStudent.school || '--'}`;
-    document.getElementById('badge-avatar-display').textContent = this.currentStudent.avatar || '🚀';
+    document.getElementById('badge-whatsapp').innerHTML = `<i class="fa-brands fa-whatsapp"></i> WhatsApp: ${this.currentStudent.whatsapp || '--'}`;
+    document.getElementById('badge-avatar-display').textContent = this.currentStudent.avatar || '🎓';
     
     // Short clean code
     const shortHash = this.currentStudent.id.substring(this.currentStudent.id.length - 4).toUpperCase();
@@ -493,7 +496,8 @@ class App {
     if (this.searchQuery) {
       sorted = sorted.filter(t => 
         t.name.toLowerCase().includes(this.searchQuery) || 
-        t.school.toLowerCase().includes(this.searchQuery)
+        t.school.toLowerCase().includes(this.searchQuery) ||
+        (t.preferredCourse && t.preferredCourse.toLowerCase().includes(this.searchQuery))
       );
     }
 
@@ -512,8 +516,11 @@ class App {
       card.className = `podium-card ${posInfo.class}`;
       card.innerHTML = `
         <div class="podium-badge">${posInfo.badgeIcon}</div>
-        <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">${team.avatar || '🚀'}</div>
+        <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">${team.avatar || '🎓'}</div>
         <div class="podium-team-name">${team.name}</div>
+        <div style="font-size: 0.8rem; color: var(--univc-emerald-mid); font-weight: 800; margin-bottom: 0.25rem;">
+          <i class="fa-solid fa-graduation-cap"></i> ${team.preferredCourse || 'Geral'}
+        </div>
         <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; margin-bottom: 0.5rem;">${team.school}</div>
         <div class="podium-score">${team.score} PTS</div>
         <small style="color: var(--univc-emerald-mid); font-weight: 800;">${team.completedStations?.length || 0}/10 Estações</small>
@@ -532,9 +539,10 @@ class App {
         <td><span class="rank-number">${index + 1}º</span></td>
         <td>
           <div style="display: flex; align-items: center; gap: 0.6rem;">
-            <span style="font-size: 1.4rem;">${team.avatar || '🚀'}</span>
+            <span style="font-size: 1.4rem;">${team.avatar || '🎓'}</span>
             <div>
               <strong>${team.name}</strong> ${isUser ? '<span style="background: var(--univc-lime); color: var(--univc-emerald-dark); font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 900; margin-left: 0.4rem;">VOCÊ</span>' : ''}
+              <div style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-graduation-cap"></i> ${team.preferredCourse || 'Não informado'}</div>
             </div>
           </div>
         </td>
@@ -565,9 +573,10 @@ class App {
       card.className = `telao-podium-card ${index === 0 ? 'first' : ''}`;
       card.innerHTML = `
         <div style="font-size: 0.9rem; font-weight: 900; color: var(--univc-lime-bright); letter-spacing: 0.1em; margin-bottom: 0.5rem;">${ranks[index]}</div>
-        <div style="font-size: 3.5rem; margin-bottom: 0.5rem;">${team.avatar || '🚀'}</div>
+        <div style="font-size: 3.5rem; margin-bottom: 0.5rem;">${team.avatar || '🎓'}</div>
         <h3 style="font-family: var(--font-heading); font-size: 1.8rem; color: white;">${team.name}</h3>
-        <p style="color: rgba(255,255,255,0.8); font-size: 1.1rem; margin-bottom: 1rem;">${team.school}</p>
+        <p style="color: var(--univc-lime-bright); font-size: 1.05rem; font-weight: 700;"><i class="fa-solid fa-graduation-cap"></i> ${team.preferredCourse || 'Geral'}</p>
+        <p style="color: rgba(255,255,255,0.8); font-size: 1rem; margin-bottom: 1rem;">${team.school}</p>
         <div style="font-family: var(--font-heading); font-size: 2.5rem; font-weight: 900; color: var(--univc-lime-bright);">${team.score} PTS</div>
       `;
       podiumContainer.appendChild(card);
@@ -579,7 +588,10 @@ class App {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td style="font-weight: 900; color: var(--univc-lime-bright);">${index + 4}º</td>
-        <td><strong>${team.avatar || '🚀'} ${team.name}</strong></td>
+        <td>
+          <strong>${team.avatar || '🎓'} ${team.name}</strong>
+          <div style="font-size: 0.85rem; color: var(--univc-lime-bright); opacity: 0.9;"><i class="fa-solid fa-graduation-cap"></i> ${team.preferredCourse || ''}</div>
+        </td>
         <td style="opacity: 0.85;">${team.school}</td>
         <td style="text-align: center; font-weight: bold; color: var(--univc-lime);">${team.completedStations?.length || 0} / 10</td>
         <td style="text-align: right; font-weight: 900; font-family: var(--font-heading); font-size: 1.4rem; color: var(--univc-lime-bright);">${team.score} PTS</td>

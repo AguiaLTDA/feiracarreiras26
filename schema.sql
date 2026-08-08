@@ -4,13 +4,15 @@
 -- ==============================================================================
 -- Instruções: Execute este script no SQL Editor do seu Dashboard Supabase (https://supabase.com)
 
--- 1. Criar a tabela de equipes e alunos visitantes
+-- 1. Criar a tabela de alunos e equipes visitantes
 CREATE TABLE IF NOT EXISTS public.teams (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     student_name TEXT,
+    whatsapp TEXT,
+    preferred_course TEXT,
     school TEXT NOT NULL,
-    avatar TEXT DEFAULT '🚀',
+    avatar TEXT DEFAULT '🎓',
     completed_stations INTEGER[] DEFAULT '{}',
     unlocked_fragments TEXT[] DEFAULT '{}',
     solved_final_puzzle BOOLEAN DEFAULT false,
@@ -20,7 +22,11 @@ CREATE TABLE IF NOT EXISTS public.teams (
     last_update TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
--- 2. Criar Índice para ordenação ultra-rápida do Leaderboard no Telão
+-- Adicionar colunas caso a tabela já tenha sido criada anteriormente
+ALTER TABLE public.teams ADD COLUMN IF NOT EXISTS whatsapp TEXT;
+ALTER TABLE public.teams ADD COLUMN IF NOT EXISTS preferred_course TEXT;
+
+-- 2. Criar Índices para ordenação ultra-rápida do Leaderboard no Telão
 CREATE INDEX IF NOT EXISTS idx_teams_score_desc ON public.teams (score DESC);
 CREATE INDEX IF NOT EXISTS idx_teams_school ON public.teams (school);
 

@@ -21,22 +21,24 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_URL.includes("SUA_SUPABASE_UR
 export const supabase = supabaseClient;
 
 /**
- * Salva ou atualiza a equipe no Supabase em tempo real
+ * Salva ou atualiza o aluno no Supabase em tempo real
  */
-export async function syncTeamToSupabase(team) {
+export async function syncTeamToSupabase(student) {
   if (!supabase) return null;
 
   const payload = {
-    id: team.id,
-    name: team.teamName || team.name,
-    student_name: team.name,
-    school: team.school,
-    avatar: team.avatar || '🚀',
-    completed_stations: team.completedStations || [],
-    unlocked_fragments: team.unlockedFragments || [],
-    solved_final_puzzle: team.solvedFinalPuzzle || false,
-    score: team.score || 0,
-    time_spent: team.timeSpent || '0m',
+    id: student.id,
+    name: student.name,
+    student_name: student.name,
+    whatsapp: student.whatsapp || '',
+    preferred_course: student.preferredCourse || '',
+    school: student.school,
+    avatar: student.avatar || '🎓',
+    completed_stations: student.completedStations || [],
+    unlocked_fragments: student.unlockedFragments || [],
+    solved_final_puzzle: student.solvedFinalPuzzle || false,
+    score: student.score || 0,
+    time_spent: student.timeSpent || '0m',
     last_update: new Date().toISOString()
   };
 
@@ -48,7 +50,7 @@ export async function syncTeamToSupabase(team) {
     if (error) {
       console.error("Erro ao sincronizar com Supabase:", error);
     } else {
-      console.log("✅ Equipe sincronizada no Supabase!");
+      console.log("✅ Aluno sincronizado no Supabase!");
     }
     return data;
   } catch (e) {
@@ -57,7 +59,7 @@ export async function syncTeamToSupabase(team) {
 }
 
 /**
- * Busca todas as equipes do Supabase
+ * Busca todos os alunos do Supabase
  */
 export async function fetchTeamsFromSupabase() {
   if (!supabase) return null;
@@ -69,7 +71,7 @@ export async function fetchTeamsFromSupabase() {
       .order('score', { ascending: false });
 
     if (error) {
-      console.error("Erro ao buscar equipes no Supabase:", error);
+      console.error("Erro ao buscar alunos no Supabase:", error);
       return null;
     }
 
@@ -77,9 +79,11 @@ export async function fetchTeamsFromSupabase() {
     return data.map(row => ({
       id: row.id,
       name: row.name,
-      studentName: row.student_name,
+      studentName: row.student_name || row.name,
+      whatsapp: row.whatsapp || '',
+      preferredCourse: row.preferred_course || '',
       school: row.school,
-      avatar: row.avatar,
+      avatar: row.avatar || '🎓',
       completedStations: row.completed_stations || [],
       unlockedFragments: row.unlocked_fragments || [],
       solvedFinalPuzzle: row.solved_final_puzzle,
