@@ -1,8 +1,7 @@
 // Supabase Configuration & Realtime Sync Module for Seahaven UNIVC
 
-// Cole sua URL e ANON KEY do Supabase abaixo:
-export const SUPABASE_URL = "SUA_SUPABASE_URL_HERE"; 
-export const SUPABASE_ANON_KEY = "SUA_SUPABASE_ANON_KEY_HERE";
+export const SUPABASE_URL = "https://snzuvksroqeszrjzfpyq.supabase.co"; 
+export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuenV2a3Nyb3Flc3pyanpmcHlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxNDYyNzAsImV4cCI6MjEwMTcyMjI3MH0.VjBtBZ4dmFEK_Qh2D4XSLck2vMQ4Y7KHEdBZojfxdGU";
 
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
