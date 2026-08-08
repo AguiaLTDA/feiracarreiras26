@@ -1,7 +1,8 @@
-// Main Application Controller - Seahaven UNIVC Feira de Carreiras 2026 (10 Estações Físicas)
+// Main Application Controller - Seahaven UNIVC Feira de Carreiras 2026 (Com Supabase Realtime)
 
 import { EVENT_INFO, STATIONS, INITIAL_TEAMS } from './data.js';
 import { sounds } from './audio.js';
+import { syncTeamToSupabase, fetchTeamsFromSupabase, subscribeToRealtimeLeaderboard } from './supabase.js';
 
 class App {
   constructor() {
@@ -16,10 +17,29 @@ class App {
     this.init();
   }
 
-  init() {
+  async init() {
     this.loadState();
     this.bindEvents();
     this.render();
+
+    // Tenta carregar dados em nuvem do Supabase
+    const cloudTeams = await fetchTeamsFromSupabase();
+    if (cloudTeams && cloudTeams.length > 0) {
+      this.teams = cloudTeams;
+      this.saveTeams();
+      this.renderLeaderboard();
+      this.renderTelaoLeaderboard();
+    }
+
+    // Ativa escuta em tempo real do Supabase
+    subscribeToRealtimeLeaderboard((realtimeTeams) => {
+      console.log("⚡ Leaderboard atualizado em tempo real via Supabase!");
+      this.teams = realtimeTeams;
+      this.saveTeams();
+      this.renderLeaderboard();
+      this.renderTelaoLeaderboard();
+      this.updateHeaderBadges();
+    });
   }
 
   loadState() {
@@ -55,6 +75,9 @@ class App {
     this.currentStudent.lastUpdate = new Date().toLocaleTimeString();
     localStorage.setItem('univc_current_student', JSON.stringify(this.currentStudent));
     this.updateUserInTeams();
+
+    // Sincroniza em nuvem no Supabase
+    syncTeamToSupabase(this.currentStudent);
   }
 
   saveTeams() {
@@ -155,7 +178,7 @@ class App {
 
     // Reset Data
     document.getElementById('btn-reset-data')?.addEventListener('click', () => {
-      if (confirm('Deseja reiniciar os dados do protótipo para o estado inicial de 10 estações?')) {
+      if (confirm('Deseja reiniciar os dados do protótipo para o estado inicial?')) {
         localStorage.clear();
         location.reload();
       }
