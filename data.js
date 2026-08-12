@@ -15,11 +15,11 @@ export const STATIONS = [
     id: 1,
     code: "EST-01",
     location: "Auditório Principal",
-    courses: "Publicidade e Propaganda · Administração · Ciências Contábeis",
+    courses: "Administração · Ciências Contábeis",
     area: "NEGÓCIOS",
     areaBadge: "ESTAÇÃO NEGÓCIOS",
     icon: "bullhorn",
-    title: "Auditório: A Cidade como Produto",
+    title: "Auditório: Gestão & Custos de Seahaven",
     fragment: "CASO",
     narrative: "PONTO CENTRAL DA TRILHA. Christof exibe a chamada do programa no telão do Auditório e explica as regras. Em Seahaven não há comerciais tradicionais: tudo se sustenta por inserção de produtos na cena.",
     challengeTitle: "Desafio de Persuasão e Custos (Auditório)",
@@ -133,7 +133,7 @@ export const STATIONS = [
     options: [
       { letter: "A", text: "Devido à unicidade das estruturas dentárias, restaurações, desgastes e morfologia da arcada de cada ser humano.", correct: true },
       { letter: "B", text: "Porque os dentes humanos alteram seu código genético a cada semana.", correct: false },
-      { letter: "C", text: "Porque todas as pessoas possuem exatamente a mesma posição e formato dentário.", correct: false },
+      { letter: "C", text: "Porque todas me as pessoas possuem exatamente a mesma posição e formato dentário.", correct: false },
       { letter: "D", text: "Porque figurantes usam lentes de contato dentárias padronizadas pela produção.", correct: false }
     ],
     hint: "Características morfológicas e tratamentos tornam a arcada dentária única."
@@ -163,22 +163,22 @@ export const STATIONS = [
     id: 8,
     code: "EST-08",
     location: "Lab Tech",
-    courses: "Análise e Desenvolvimento de Sistemas (ADS)",
+    courses: "Análise e Dev. de Sistemas (ADS) · Publicidade e Propaganda",
     area: "TECNOLOGIA",
-    areaBadge: "ESTAÇÃO TECNOLOGIA",
-    icon: "code",
-    title: "Lab Tech: Algoritmos & Debugging",
+    areaBadge: "ESTAÇÃO TECNOLOGIA & MÍDIA",
+    icon: "laptop-code",
+    title: "Lab Tech: Algoritmos de Redes Sociais & Engajamento",
     fragment: "DIA",
-    narrative: "No Lab Tech, analisamos o software que controla Seahaven. Um erro de transmissão no rádio do carro vazou o canal de áudio da produção para Truman.",
-    challengeTitle: "Desafio de Code Debugging (Lab Tech)",
-    question: "Observe o trecho de código do rádio: `if (frequency == 99.9) { broadcast(STAFF_AUDIO_CHANNEL); }`. Qual o erro de arquitetura de software que vazou a produção?",
+    narrative: "No Lab Tech, ADS e Publicidade se encontram para entender como os algoritmos de recomendação e inteligência de dados direcionam anúncios hiperpersonalizados nas redes sociais.",
+    challengeTitle: "Desafio de Algoritmos & Tráfego Pago (ADS + Publicidade)",
+    question: "Uma empresa lança uma campanha em redes sociais combinando programação (ADS) e estratégia de mídia (Publicidade). Qual é a relação técnica fundamental entre o algoritmo das plataformas e o alcance dos anúncios patrocinados?",
     options: [
-      { letter: "A", text: "Falta de criptografia e canal aberto em frequência pública sem autenticação de perfil de usuário (Truman vs Staff).", correct: true },
-      { letter: "B", text: "Uso de operador de igualdade que trava o processador do carro.", correct: false },
-      { letter: "C", text: "Falta de uma interface em HTML para sintonizar o rádio FM.", correct: false },
-      { letter: "D", text: "O código não possui variáveis declaradas em linguagem assembly.", correct: false }
+      { letter: "A", text: "O algoritmo analisa o comportamento, histórico de cliques e engajamento dos usuários (ADS) para exibir anúncios direcionados ao perfil de interesse ideal (Publicidade).", correct: true },
+      { letter: "B", text: "Os anúncios patrocinados são exibidos para todos os usuários em ordem alfabética, sem qualquer análise de dados.", correct: false },
+      { letter: "C", text: "O algoritmo das redes sociais impede o uso de segmentação por localização, idade ou interesses dos consumidores.", correct: false },
+      { letter: "D", text: "As campanhas publicitárias de tráfego pago funcionam de forma idêntica a panfletos impressos, sem depender de sistemas computacionais.", correct: false }
     ],
-    hint: "Transmitir áudio sensível de staff em canal aberto de rádio."
+    hint: "Pense na combinação entre inteligência de dados/código (ADS) e segmentação de público (Publicidade)."
   },
   {
     id: 9,
