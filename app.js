@@ -91,6 +91,10 @@ class App {
     }
   }
 
+  isUserRegistered() {
+    return Boolean(this.currentStudent && this.currentStudent.name && this.currentStudent.name.trim() !== '' && this.currentStudent.school);
+  }
+
   saveStudent() {
     if (!this.currentStudent.name) return;
     this.currentStudent.lastUpdate = new Date().toLocaleTimeString();
@@ -169,6 +173,14 @@ class App {
         if (labelWa) labelWa.innerHTML = '<i class="fa-brands fa-whatsapp" style="color: #22c55e;"></i> WhatsApp / Celular do Líder:';
       });
     }
+
+    // Redirect to Registration Buttons
+    document.querySelectorAll('.btn-go-cadastro').forEach(btn => {
+      btn.addEventListener('click', () => {
+        sounds.playClick();
+        this.switchTab('cadastro');
+      });
+    });
 
     // Nav Tabs
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -333,6 +345,33 @@ class App {
     document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
     document.getElementById(`view-${tabId}`)?.classList.add('active');
 
+    // Handle Lock state for Estações and Senha
+    const isRegistered = this.isUserRegistered();
+
+    if (tabId === 'estacoes') {
+      const lockOverlay = document.getElementById('lock-overlay-estacoes');
+      const content = document.getElementById('content-estacoes-container');
+      if (!isRegistered) {
+        if (lockOverlay) lockOverlay.style.display = 'block';
+        if (content) content.style.display = 'none';
+      } else {
+        if (lockOverlay) lockOverlay.style.display = 'none';
+        if (content) content.style.display = 'block';
+      }
+    }
+
+    if (tabId === 'senha') {
+      const lockOverlay = document.getElementById('lock-overlay-senha');
+      const content = document.getElementById('content-senha-container');
+      if (!isRegistered) {
+        if (lockOverlay) lockOverlay.style.display = 'block';
+        if (content) content.style.display = 'none';
+      } else {
+        if (lockOverlay) lockOverlay.style.display = 'none';
+        if (content) content.style.display = 'block';
+      }
+    }
+
     if (tabId === 'admin') {
       this.renderAdminView();
     }
@@ -387,7 +426,7 @@ class App {
     // Auto navigate to stations
     setTimeout(() => {
       this.switchTab('estacoes');
-    }, 400);
+    }, 300);
   }
 
   renderBadge() {
@@ -408,21 +447,58 @@ class App {
     }
 
     document.getElementById('badge-school-name').innerHTML = `<i class="fa-solid fa-school"></i> Escola: ${this.currentStudent.school || '--'}`;
-    document.getElementById('badge-whatsapp').innerHTML = `<i class="fa-brands fa-whatsapp"></i> WhatsApp do Líder: ${this.currentStudent.whatsapp || '--'}`;
+    document.getElementById('badge-whatsapp').innerHTML = `<i class="fa-brands fa-whatsapp"></i> WhatsApp: ${this.currentStudent.whatsapp || '--'}`;
     
     // Short clean code
     const shortHash = this.currentStudent.id.substring(this.currentStudent.id.length - 4).toUpperCase();
     document.getElementById('badge-id-code').textContent = `#UNIVC-2026-${shortHash}`;
-    
-    document.getElementById('badge-user-status').textContent = 'Cadastrado!';
-    document.getElementById('badge-user-status').style.background = 'var(--univc-lime)';
-    document.getElementById('badge-user-status').style.color = 'var(--univc-emerald-dark)';
   }
 
   updateHeaderBadges() {
-    const done = this.currentStudent.completedStations ? this.currentStudent.completedStations.length : 0;
-    document.getElementById('badge-stations-done').textContent = `${done}/10`;
-    document.getElementById('badge-fragments-count').textContent = `${this.currentStudent.unlockedFragments ? this.currentStudent.unlockedFragments.length : 0}/10`;
+    const isRegistered = this.isUserRegistered();
+
+    // Tab 1 status badge
+    const badgeUserStatus = document.getElementById('badge-user-status');
+    if (badgeUserStatus) {
+      if (isRegistered) {
+        badgeUserStatus.textContent = '✓ Cadastrado!';
+        badgeUserStatus.style.background = 'var(--univc-lime)';
+        badgeUserStatus.style.color = 'var(--univc-emerald-dark)';
+      } else {
+        badgeUserStatus.textContent = 'Pendente';
+        badgeUserStatus.style.background = '#fef08a';
+        badgeUserStatus.style.color = '#854d0e';
+      }
+    }
+
+    // Tab 2 status badge
+    const badgeStationsDone = document.getElementById('badge-stations-done');
+    if (badgeStationsDone) {
+      if (isRegistered) {
+        const done = this.currentStudent.completedStations ? this.currentStudent.completedStations.length : 0;
+        badgeStationsDone.textContent = `${done}/10`;
+        badgeStationsDone.style.background = 'var(--univc-emerald-dark)';
+        badgeStationsDone.style.color = 'white';
+      } else {
+        badgeStationsDone.textContent = '🔒 Bloqueado';
+        badgeStationsDone.style.background = '#fee2e2';
+        badgeStationsDone.style.color = '#991b1b';
+      }
+    }
+
+    // Tab 3 status badge
+    const badgeFragmentsCount = document.getElementById('badge-fragments-count');
+    if (badgeFragmentsCount) {
+      if (isRegistered) {
+        badgeFragmentsCount.textContent = `${this.currentStudent.unlockedFragments ? this.currentStudent.unlockedFragments.length : 0}/10`;
+        badgeFragmentsCount.style.background = 'var(--univc-emerald-dark)';
+        badgeFragmentsCount.style.color = 'white';
+      } else {
+        badgeFragmentsCount.textContent = '🔒 Bloqueado';
+        badgeFragmentsCount.style.background = '#fee2e2';
+        badgeFragmentsCount.style.color = '#991b1b';
+      }
+    }
 
     // Calculate user rank
     const sorted = [...this.teams].sort((a, b) => b.score - a.score);

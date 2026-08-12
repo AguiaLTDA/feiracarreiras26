@@ -41,13 +41,13 @@
   <nav class="nav-tabs-wrapper">
     <div class="nav-tabs">
       <button class="tab-btn active" data-tab="cadastro">
-        <i class="fa-solid fa-id-card"></i> 1. Cadastro <span class="badge-count" id="badge-user-status">Incompleto</span>
+        <i class="fa-solid fa-id-card"></i> 1. Cadastro <span class="badge-count" id="badge-user-status">Pendente</span>
       </button>
       <button class="tab-btn" data-tab="estacoes">
-        <i class="fa-solid fa-cubes-stacked"></i> 2. Estações de Desafio <span class="badge-count" id="badge-stations-done">0/10</span>
+        <i class="fa-solid fa-cubes-stacked"></i> 2. Estações de Desafio <span class="badge-count" id="badge-stations-done">🔒 Bloqueado</span>
       </button>
       <button class="tab-btn" data-tab="senha">
-        <i class="fa-solid fa-key"></i> 3. Desafio da Cúpula <span class="badge-count" id="badge-fragments-count">0/10</span>
+        <i class="fa-solid fa-key"></i> 3. Desafio da Cúpula <span class="badge-count" id="badge-fragments-count">🔒 Bloqueado</span>
       </button>
       <button class="tab-btn" data-tab="ranking">
         <i class="fa-solid fa-trophy"></i> 4. Ranking Ao Vivo <span class="badge-count" id="badge-ranking-pos">#--</span>
@@ -212,97 +212,131 @@
 
     <!-- Screen 2: Estações de Desafio -->
     <section id="view-estacoes" class="view-section">
-      <!-- Hanging Banners from Image 2 -->
-      <div class="hanging-banners-container">
-        <div class="hanging-banner">
-          <span class="banner-area-tag"><i class="fa-solid fa-heart-pulse"></i> ESTAÇÃO SAÚDE</span>
-          <p>"Cuidar de pessoas é transformar vidas todos os dias."</p>
-          <small style="display: block; margin-top: 0.5rem; color: var(--univc-lime-bright); font-weight: 700;">Clínica-Escola, Semiologia, Odontológica, Quadra, Clínica Veterinária</small>
-        </div>
-        <div class="hanging-banner">
-          <span class="banner-area-tag"><i class="fa-solid fa-briefcase"></i> ESTAÇÃO NEGÓCIOS</span>
-          <p>"Grandes ideias movem negócios e constroem o futuro."</p>
-          <small style="display: block; margin-top: 0.5rem; color: var(--univc-lime-bright); font-weight: 700;">Auditório Principal, NPJ (Práticas Jurídicas)</small>
-        </div>
-        <div class="hanging-banner">
-          <span class="banner-area-tag"><i class="fa-solid fa-laptop-code"></i> ESTAÇÃO TECNOLOGIA</span>
-          <p>"Inovar hoje é construir soluções para um amanhã melhor."</p>
-          <small style="display: block; margin-top: 0.5rem; color: var(--univc-lime-bright); font-weight: 700;">Lab Tech (Sistemas), Lab de Radiologia, Lab de Engenharias</small>
-        </div>
+      <!-- Lock Overlay Banner (Visible if registration is incomplete) -->
+      <div id="lock-overlay-estacoes" class="custom-card registration-lock-banner" style="display: none; text-align: center; padding: 3rem 1.5rem; margin-bottom: 2rem;">
+        <div style="font-size: 4rem; color: #eab308; margin-bottom: 1rem;">🔒</div>
+        <h2 style="font-family: var(--font-heading); color: var(--univc-emerald-dark); font-size: 1.8rem; margin-bottom: 0.75rem;">
+          Estações Bloqueadas: Conclua seu Cadastro
+        </h2>
+        <p style="color: var(--text-muted); font-size: 1.05rem; max-width: 620px; margin: 0 auto 1.5rem auto; line-height: 1.6;">
+          Para acessar as <strong>10 estações de desafios do campus UNIVC</strong>, responder às perguntas profissionais e pontuar no ranking, registre seu nome e escola no Passo 1.
+        </p>
+        <button class="btn-lime btn-go-cadastro" style="padding: 0.85rem 2rem; font-size: 1.1rem;">
+          <i class="fa-solid fa-id-card"></i> Ir para o Cadastro Agora
+        </button>
       </div>
 
-      <div class="flex-between" style="flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
-        <div>
-          <h2 style="font-family: var(--font-heading); font-size: 1.8rem; color: var(--univc-emerald-dark);">
-            <i class="fa-solid fa-map-location-dot"></i> 10 Estações do Campus UNIVC
-          </h2>
-          <p style="color: var(--text-muted); font-weight: 600;">Selecione a estação em que você está localizado para resolver o desafio profissional.</p>
+      <!-- Main Stations Content (Only visible if registered) -->
+      <div id="content-estacoes-container">
+        <!-- Hanging Banners from Image 2 -->
+        <div class="hanging-banners-container">
+          <div class="hanging-banner">
+            <span class="banner-area-tag"><i class="fa-solid fa-heart-pulse"></i> ESTAÇÃO SAÚDE</span>
+            <p>"Cuidar de pessoas é transformar vidas todos os dias."</p>
+            <small style="display: block; margin-top: 0.5rem; color: var(--univc-lime-bright); font-weight: 700;">Clínica-Escola, Semiologia, Odontológica, Quadra, Clínica Veterinária</small>
+          </div>
+          <div class="hanging-banner">
+            <span class="banner-area-tag"><i class="fa-solid fa-briefcase"></i> ESTAÇÃO NEGÓCIOS</span>
+            <p>"Grandes ideias movem negócios e constroem o futuro."</p>
+            <small style="display: block; margin-top: 0.5rem; color: var(--univc-lime-bright); font-weight: 700;">Auditório Principal, NPJ (Práticas Jurídicas)</small>
+          </div>
+          <div class="hanging-banner">
+            <span class="banner-area-tag"><i class="fa-solid fa-laptop-code"></i> ESTAÇÃO TECNOLOGIA</span>
+            <p>"Inovar hoje é construir soluções para um amanhã melhor."</p>
+            <small style="display: block; margin-top: 0.5rem; color: var(--univc-lime-bright); font-weight: 700;">Lab Tech (Sistemas), Lab de Radiologia, Lab de Engenharias</small>
+          </div>
         </div>
-        
-        <div style="display: flex; gap: 0.5rem;">
-          <button class="btn-secondary filter-area-btn active" data-area="ALL">Todas</button>
-          <button class="btn-secondary filter-area-btn" data-area="SAÚDE">Saúde</button>
-          <button class="btn-secondary filter-area-btn" data-area="NEGÓCIOS">Negócios</button>
-          <button class="btn-secondary filter-area-btn" data-area="TECNOLOGIA">Tecnologia</button>
-        </div>
-      </div>
 
-      <!-- Stations Cards Grid -->
-      <div id="grid-stations" class="stations-grid">
-        <!-- Rendered via JS -->
+        <div class="flex-between" style="flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+          <div>
+            <h2 style="font-family: var(--font-heading); font-size: 1.8rem; color: var(--univc-emerald-dark);">
+              <i class="fa-solid fa-map-location-dot"></i> 10 Estações do Campus UNIVC
+            </h2>
+            <p style="color: var(--text-muted); font-weight: 600;">Selecione a estação em que você está localizado para resolver o desafio profissional.</p>
+          </div>
+          
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn-secondary filter-area-btn active" data-area="ALL">Todas</button>
+            <button class="btn-secondary filter-area-btn" data-area="SAÚDE">Saúde</button>
+            <button class="btn-secondary filter-area-btn" data-area="NEGÓCIOS">Negócios</button>
+            <button class="btn-secondary filter-area-btn" data-area="TECNOLOGIA">Tecnologia</button>
+          </div>
+        </div>
+
+        <!-- Stations Cards Grid -->
+        <div id="grid-stations" class="stations-grid">
+          <!-- Rendered via JS -->
+        </div>
       </div>
     </section>
 
     <!-- Screen 3: Desafio da Cúpula / Senha Final -->
     <section id="view-senha" class="view-section">
-      <div class="hero-box">
-        <h2><i class="fa-solid fa-door-open"></i> O Desafio da Cúpula: A Senha de Truman</h2>
-        <p>
-          Christof está no alto da torre de controle tentando convencê-lo a ficar. Para destravar a porta de saída da cúpula e 
-          acessar o campus real da UNIVC, você precisa organizar os 10 fragmentos coletados nas 10 estações do circuito.
+      <!-- Lock Overlay Banner (Visible if registration is incomplete) -->
+      <div id="lock-overlay-senha" class="custom-card registration-lock-banner" style="display: none; text-align: center; padding: 3rem 1.5rem; margin-bottom: 2rem;">
+        <div style="font-size: 4rem; color: #eab308; margin-bottom: 1rem;">🔒</div>
+        <h2 style="font-family: var(--font-heading); color: var(--univc-emerald-dark); font-size: 1.8rem; margin-bottom: 0.75rem;">
+          Desafio da Cúpula Bloqueado: Conclua seu Cadastro
+        </h2>
+        <p style="color: var(--text-muted); font-size: 1.05rem; max-width: 620px; margin: 0 auto 1.5rem auto; line-height: 1.6;">
+          Para destravar a porta de saída da cúpula de Seahaven e testar sua frase de senha, você precisa registrar seu participante no Passo 1 e coletar os fragmentos.
         </p>
-      </div>
-
-      <!-- Fragments Inventory -->
-      <div class="fragments-inventory">
-        <div class="flex-between">
-          <h3 style="font-family: var(--font-heading); color: var(--univc-emerald-dark);"><i class="fa-solid fa-layer-group"></i> Inventário de Fragmentos Coletados</h3>
-          <span id="label-fragments-progress" style="font-weight: 800; color: var(--univc-emerald-mid);">0 / 10 Desbloqueados</span>
-        </div>
-        <div id="container-unlocked-words" class="fragments-flex">
-          <!-- Rendered via JS -->
-        </div>
-      </div>
-
-      <!-- Assembly Box -->
-      <h3 style="font-family: var(--font-heading); color: var(--univc-emerald-dark); margin-bottom: 0.75rem;">
-        <i class="fa-solid fa-arrow-down-short-wide"></i> Monte a Frase da Senha Aqui (Clique nos fragmentos acima):
-      </h3>
-      <div id="area-sentence-assembly" class="sentence-assembly-area">
-        <div id="placeholder-text-assembly" style="color: rgba(255,255,255,0.4); font-weight: 600; width: 100%; text-align: center; padding-top: 2rem;">
-          Clique nas palavras acima para adicioná-las na frase...
-        </div>
-      </div>
-
-      <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-        <button id="btn-clear-sentence" class="btn-secondary">
-          <i class="fa-solid fa-rotate-left"></i> Limpar Frase
-        </button>
-        <button id="btn-verify-password" class="btn-lime" style="padding: 0.9rem 2rem; font-size: 1.1rem;">
-          <i class="fa-solid fa-lock-open"></i> Testar Senha da Cúpula
+        <button class="btn-lime btn-go-cadastro" style="padding: 0.85rem 2rem; font-size: 1.1rem;">
+          <i class="fa-solid fa-id-card"></i> Ir para o Cadastro Agora
         </button>
       </div>
 
-      <!-- Celebration Box when unlocked -->
-      <div id="dome-door-unlocked" class="dome-door-unlocked">
-        <i class="fa-solid fa-door-open fa-4x" style="color: var(--univc-lime-bright); margin-bottom: 1rem;"></i>
-        <h2 style="font-family: var(--font-heading); font-size: 2.2rem; margin-bottom: 0.5rem;">A PORTA DA CÚPULA SE ABRIU!</h2>
-        <p style="font-size: 1.3rem; max-width: 800px; margin: 0 auto 1.5rem auto; font-family: var(--font-heading); font-weight: 800; color: var(--univc-lime-bright);">
-          "CASO EU NÃO OS VEJA MAIS: BOM DIA E BOA NOITE!"
-        </p>
-        <p style="font-size: 1rem; opacity: 0.95;">
-          Parabéns! Você desvendou a ilusão de Seahaven e conquistou <strong>+500 Pontos Bônus</strong> no Ranking da Feira de Carreiras UNIVC!
-        </p>
+      <!-- Main Password Content (Only visible if registered) -->
+      <div id="content-senha-container">
+        <div class="hero-box">
+          <h2><i class="fa-solid fa-door-open"></i> O Desafio da Cúpula: A Senha de Truman</h2>
+          <p>
+            Christof está no alto da torre de controle tentando convencê-lo a ficar. Para destravar a porta de saída da cúpula e 
+            acessar o campus real da UNIVC, você precisa organizar os 10 fragmentos coletados nas 10 estações do circuito.
+          </p>
+        </div>
+
+        <!-- Fragments Inventory -->
+        <div class="fragments-inventory">
+          <div class="flex-between">
+            <h3 style="font-family: var(--font-heading); color: var(--univc-emerald-dark);"><i class="fa-solid fa-layer-group"></i> Inventário de Fragmentos Coletados</h3>
+            <span id="label-fragments-progress" style="font-weight: 800; color: var(--univc-emerald-mid);">0 / 10 Desbloqueados</span>
+          </div>
+          <div id="container-unlocked-words" class="fragments-flex">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <!-- Assembly Box -->
+        <h3 style="font-family: var(--font-heading); color: var(--univc-emerald-dark); margin-bottom: 0.75rem;">
+          <i class="fa-solid fa-arrow-down-short-wide"></i> Monte a Frase da Senha Aqui (Clique nos fragmentos acima):
+        </h3>
+        <div id="area-sentence-assembly" class="sentence-assembly-area">
+          <div id="placeholder-text-assembly" style="color: rgba(255,255,255,0.4); font-weight: 600; width: 100%; text-align: center; padding-top: 2rem;">
+            Clique nas palavras acima para adicioná-las na frase...
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+          <button id="btn-clear-sentence" class="btn-secondary">
+            <i class="fa-solid fa-rotate-left"></i> Limpar Frase
+          </button>
+          <button id="btn-verify-password" class="btn-lime" style="padding: 0.9rem 2rem; font-size: 1.1rem;">
+            <i class="fa-solid fa-lock-open"></i> Testar Senha da Cúpula
+          </button>
+        </div>
+
+        <!-- Celebration Box when unlocked -->
+        <div id="dome-door-unlocked" class="dome-door-unlocked">
+          <i class="fa-solid fa-door-open fa-4x" style="color: var(--univc-lime-bright); margin-bottom: 1rem;"></i>
+          <h2 style="font-family: var(--font-heading); font-size: 2.2rem; margin-bottom: 0.5rem;">A PORTA DA CÚPULA SE ABRIU!</h2>
+          <p style="font-size: 1.3rem; max-width: 800px; margin: 0 auto 1.5rem auto; font-family: var(--font-heading); font-weight: 800; color: var(--univc-lime-bright);">
+            "CASO EU NÃO OS VEJA MAIS: BOM DIA E BOA NOITE!"
+          </p>
+          <p style="font-size: 1rem; opacity: 0.95;">
+            Parabéns! Você desvendou a ilusão de Seahaven e conquistou <strong>+500 Pontos Bônus</strong> no Ranking da Feira de Carreiras UNIVC!
+          </p>
+        </div>
       </div>
     </section>
 
