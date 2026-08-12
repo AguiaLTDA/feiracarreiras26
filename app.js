@@ -31,7 +31,7 @@ class App {
       this.switchTab('admin');
     }
 
-    // Tenta carregar dados em nuvem do Supabase
+    // Tenta carregar dados em nuvem do Supabase imediatamente
     const cloudTeams = await fetchTeamsFromSupabase();
     if (cloudTeams) {
       this.teams = cloudTeams;
@@ -51,6 +51,23 @@ class App {
       this.updateHeaderBadges();
       if (this.isAdminAuthenticated) this.renderAdminDashboard();
     });
+
+    // Polling contínuo automático a cada 4s para garantir que o Telão e Ranking atualizem sem falha
+    setInterval(async () => {
+      const latestTeams = await fetchTeamsFromSupabase();
+      if (latestTeams) {
+        const hasChanges = JSON.stringify(latestTeams) !== JSON.stringify(this.teams);
+        if (hasChanges) {
+          console.log("🔄 Atualização de dados detectada no polling da nuvem!");
+          this.teams = latestTeams;
+          this.saveTeams();
+          this.renderLeaderboard();
+          this.renderTelaoLeaderboard();
+          this.updateHeaderBadges();
+          if (this.isAdminAuthenticated) this.renderAdminDashboard();
+        }
+      }
+    }, 4000);
   }
 
   loadState() {
@@ -116,6 +133,15 @@ class App {
 
   saveTeams() {
     localStorage.setItem('univc_all_teams', JSON.stringify(this.teams));
+    this.broadcastSync();
+  }
+
+  broadcastSync() {
+    if (this.syncChannel) {
+      try {
+        this.syncChannel.postMessage({ type: 'SYNC_TEAMS', teams: this.teams });
+      } catch (err) {}
+    }
   }
 
   updateUserInTeams() {
@@ -130,6 +156,32 @@ class App {
   }
 
   bindEvents() {
+    // Sincronização em tempo real entre diferentes abas no mesmo dispositivo (BroadcastChannel + LocalStorage Event)
+    try {
+      this.syncChannel = new BroadcastChannel('univc_leaderboard_channel');
+      this.syncChannel.onmessage = (event) => {
+        if (event.data && event.data.type === 'SYNC_TEAMS' && Array.isArray(event.data.teams)) {
+          this.teams = event.data.teams;
+          this.renderLeaderboard();
+          this.renderTelaoLeaderboard();
+          if (this.isAdminAuthenticated) this.renderAdminDashboard();
+        }
+      };
+    } catch (e) {
+      console.warn("BroadcastChannel não suportado.");
+    }
+
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'univc_all_teams' && e.newValue) {
+        try {
+          this.teams = JSON.parse(e.newValue);
+          this.renderLeaderboard();
+          this.renderTelaoLeaderboard();
+          if (this.isAdminAuthenticated) this.renderAdminDashboard();
+        } catch (err) {}
+      }
+    });
+
     // Hash change
     window.addEventListener('hashchange', () => {
       if (window.location.hash === '#admin') {

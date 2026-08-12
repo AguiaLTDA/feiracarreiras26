@@ -26,7 +26,7 @@ export const supabase = supabaseClient;
 export async function syncTeamToSupabase(student) {
   if (!supabase) return null;
 
-  const payload = {
+  const fullPayload = {
     id: student.id,
     name: student.name,
     student_name: student.name,
@@ -49,14 +49,45 @@ export async function syncTeamToSupabase(student) {
   try {
     const { data, error } = await supabase
       .from('teams')
-      .upsert(payload, { onConflict: 'id' });
+      .upsert(fullPayload, { onConflict: 'id' });
 
     if (error) {
-      console.error("Erro ao sincronizar com Supabase:", error);
+      console.warn("⚠️ Tentando fallback de sincronização segura no Supabase...", error.message);
+      
+      const displayName = student.registrationType === 'group'
+        ? `${student.groupName || student.name} (Líder: ${student.leaderName || student.name})`
+        : student.name;
+
+      const basicPayload = {
+        id: student.id,
+        name: displayName,
+        student_name: student.leaderName || student.name,
+        whatsapp: student.whatsapp || '',
+        preferred_course: student.preferredCourse || '',
+        school: student.school,
+        avatar: student.avatar || (student.registrationType === 'group' ? '👥' : '🎓'),
+        completed_stations: student.completedStations || [],
+        unlocked_fragments: student.unlockedFragments || [],
+        solved_final_puzzle: student.solvedFinalPuzzle || false,
+        score: student.score || 0,
+        time_spent: student.timeSpent || '0m',
+        last_update: new Date().toISOString()
+      };
+
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('teams')
+        .upsert(basicPayload, { onConflict: 'id' });
+
+      if (fallbackError) {
+        console.error("❌ Erro ao sincronizar no Supabase:", fallbackError);
+      } else {
+        console.log("✅ Aluno/Grupo sincronizado no Supabase (Modo de Compatibilidade)!");
+      }
+      return fallbackData;
     } else {
       console.log("✅ Aluno/Grupo sincronizado no Supabase!");
+      return data;
     }
-    return data;
   } catch (e) {
     console.error("Erro de rede Supabase:", e);
   }
