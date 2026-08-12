@@ -52,6 +52,9 @@
       <button class="tab-btn" data-tab="ranking">
         <i class="fa-solid fa-trophy"></i> 4. Ranking Ao Vivo <span class="badge-count" id="badge-ranking-pos">#--</span>
       </button>
+      <span class="badge-count combo-badge" id="badge-combo-streak" style="display: none; background: linear-gradient(135deg, #f97316, #dc2626); color: white; font-weight: 800; font-size: 0.85rem; padding: 0.35rem 0.85rem; border-radius: 20px; box-shadow: 0 0 10px rgba(249, 115, 22, 0.4); border: 1px solid #fdba74; align-self: center; margin-left: 0.5rem;">
+        🔥 Combo x0
+      </span>
       <button class="tab-btn" data-tab="admin">
         <i class="fa-solid fa-user-shield"></i> Painel Admin
       </button>
@@ -573,7 +576,12 @@
           <span id="modal-station-code" class="station-code">EST-01</span>
           <h3 id="modal-station-title" style="display: inline-block; margin-left: 0.5rem;">Título da Estação</h3>
         </div>
-        <button id="btn-close-modal" class="btn-close">&times;</button>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div id="modal-station-timer" class="station-timer-badge" style="background: rgba(6, 78, 59, 0.12); border: 1px solid var(--univc-emerald-mid); padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 700; font-size: 0.85rem; color: var(--univc-emerald-dark); display: flex; align-items: center; gap: 0.35rem;">
+            <i class="fa-solid fa-stopwatch" style="color: var(--univc-emerald-mid);"></i> Bônus Tempo: <span id="modal-timer-bonus" style="color: var(--univc-emerald-dark); font-weight: 900;">+60</span> PTS (<span id="modal-timer-seconds">0</span>s)
+          </div>
+          <button id="btn-close-modal" class="btn-close">&times;</button>
+        </div>
       </div>
 
       <div style="background: rgba(6, 78, 59, 0.08); padding: 0.6rem 1rem; border-radius: 8px; font-weight: 700; color: var(--univc-emerald-dark); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
