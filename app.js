@@ -106,6 +106,9 @@ class App {
     this.currentStudent.lastUpdate = new Date().toLocaleTimeString();
     localStorage.setItem('univc_current_student', JSON.stringify(this.currentStudent));
     this.updateUserInTeams();
+    this.saveTeams();
+    this.renderLeaderboard();
+    this.renderTelaoLeaderboard();
 
     // Sincroniza em nuvem no Supabase
     syncTeamToSupabase(this.currentStudent);
@@ -416,8 +419,23 @@ class App {
     if (enable) {
       document.body.classList.add('telao-mode');
       this.renderTelaoLeaderboard();
+
+      // Inicia Polling de Backup a cada 5s para o Telão do auditório
+      if (this.telaoPollInterval) clearInterval(this.telaoPollInterval);
+      this.telaoPollInterval = setInterval(async () => {
+        const teams = await fetchTeamsFromSupabase();
+        if (teams) {
+          this.teams = teams;
+          this.saveTeams();
+        }
+        this.renderTelaoLeaderboard();
+      }, 5000);
     } else {
       document.body.classList.remove('telao-mode');
+      if (this.telaoPollInterval) {
+        clearInterval(this.telaoPollInterval);
+        this.telaoPollInterval = null;
+      }
     }
   }
 
@@ -1030,18 +1048,42 @@ class App {
     if (!podiumContainer || !tableBody) return;
 
     const sorted = [...this.teams].sort((a, b) => b.score - a.score);
-    
-    // Telão Podium
+
+    if (sorted.length === 0) {
+      podiumContainer.innerHTML = `
+        <div style="grid-column: 1 / -1; background: rgba(6, 78, 59, 0.6); border: 2px dashed var(--univc-lime); padding: 3rem 1.5rem; border-radius: 24px; text-align: center;">
+          <div style="font-size: 3.5rem; margin-bottom: 1rem;">📡</div>
+          <h2 style="font-family: var(--font-heading); color: var(--univc-lime-bright); font-size: 2rem; margin-bottom: 0.5rem;">
+            TRANSMISSÃO AO VIVO ATIVA
+          </h2>
+          <p style="font-size: 1.2rem; color: rgba(255,255,255,0.9); font-weight: 600;">
+            Aguardando os primeiros registros dos alunos e grupos nas estações do campus UNIVC...
+          </p>
+        </div>
+      `;
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align: center; padding: 2rem; color: var(--univc-lime); font-size: 1.1rem;">
+            <i class="fa-solid fa-signal fa-beat" style="margin-right: 0.5rem;"></i> Atualizando ranking em tempo real a cada 5 segundos...
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    // Telão Podium (1º no centro, 2º à esquerda, 3º à direita)
     podiumContainer.innerHTML = '';
     const top3 = sorted.slice(0, 3);
+    const podiumClasses = ['first', 'second', 'third'];
+    const ranks = ['1º LUGAR', '2º LUGAR', '3º LUGAR'];
+
     top3.forEach((team, index) => {
-      const ranks = ['1º LUGAR', '2º LUGAR', '3º LUGAR'];
       const isGroup = team.registrationType === 'group';
       const displayName = isGroup ? (team.groupName || team.name) : (team.name || 'Aluno');
       const subInfo = isGroup ? `Líder: ${team.leaderName} (${team.groupSize} Alunos)` : team.preferredCourse;
 
       const card = document.createElement('div');
-      card.className = `telao-podium-card ${index === 0 ? 'first' : ''}`;
+      card.className = `telao-podium-card ${podiumClasses[index] || ''}`;
       card.innerHTML = `
         <div style="font-size: 0.9rem; font-weight: 900; color: var(--univc-lime-bright); letter-spacing: 0.1em; margin-bottom: 0.5rem;">${ranks[index]}</div>
         <div style="font-size: 3.5rem; margin-bottom: 0.5rem;">${isGroup ? '👥' : (team.avatar || '🎓')}</div>

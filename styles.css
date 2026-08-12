@@ -1001,12 +1001,25 @@ body.telao-mode main {
   padding: 2.5rem 1.5rem;
   text-align: center;
   box-shadow: 0 0 30px rgba(132, 204, 22, 0.2);
+  transition: all 0.3s ease;
 }
 
 .telao-podium-card.first {
-  background: linear-gradient(180deg, rgba(245, 158, 11, 0.25) 0%, rgba(6, 78, 59, 0.8) 100%);
+  order: 2;
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.25) 0%, rgba(6, 78, 59, 0.85) 100%);
   border-color: var(--univc-gold);
   transform: scale(1.08);
+  box-shadow: 0 0 45px rgba(245, 158, 11, 0.4);
+}
+
+.telao-podium-card.second {
+  order: 1;
+  border-color: var(--univc-silver);
+}
+
+.telao-podium-card.third {
+  order: 3;
+  border-color: var(--univc-bronze);
 }
 
 .telao-table {
