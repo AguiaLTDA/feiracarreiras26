@@ -26,6 +26,11 @@ class App {
     this.bindEvents();
     this.render();
 
+    // Check hash URL
+    if (window.location.hash === '#admin') {
+      this.switchTab('admin');
+    }
+
     // Tenta carregar dados em nuvem do Supabase
     const cloudTeams = await fetchTeamsFromSupabase();
     if (cloudTeams) {
@@ -108,6 +113,13 @@ class App {
   }
 
   bindEvents() {
+    // Hash change
+    window.addEventListener('hashchange', () => {
+      if (window.location.hash === '#admin') {
+        this.switchTab('admin');
+      }
+    });
+
     // Nav Tabs
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -186,7 +198,7 @@ class App {
     // Admin Auth Form
     document.getElementById('form-admin-login')?.addEventListener('submit', (e) => {
       e.preventDefault();
-      const pwd = document.getElementById('input-admin-password').value;
+      const pwd = (document.getElementById('input-admin-password')?.value || '').trim();
       if (pwd === ADMIN_PASSWORD) {
         sounds.playSuccess();
         this.isAdminAuthenticated = true;
@@ -194,7 +206,7 @@ class App {
         this.renderAdminView();
       } else {
         sounds.playError();
-        alert('Senha de Administrador incorreta!');
+        alert('Senha de Administrador incorreta! (Dica: admin2026)');
       }
     });
 
@@ -203,6 +215,8 @@ class App {
       sounds.playClick();
       this.isAdminAuthenticated = false;
       sessionStorage.removeItem('univc_admin_authed');
+      const inputPwd = document.getElementById('input-admin-password');
+      if (inputPwd) inputPwd.value = '';
       this.renderAdminView();
     });
 
@@ -598,6 +612,18 @@ class App {
 
     // Render Table
     tableBody.innerHTML = '';
+
+    if (sorted.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+            Nenhum aluno cadastrado ainda. Seja o primeiro a se registrar!
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
     sorted.forEach((team, index) => {
       const isUser = team.id === this.currentStudent.id;
       const tr = document.createElement('tr');
@@ -673,13 +699,17 @@ class App {
     const authBox = document.getElementById('admin-auth-box');
     const dashBox = document.getElementById('admin-dashboard-box');
 
+    // Make sure section view-admin is active
+    document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+    document.getElementById('view-admin')?.classList.add('active');
+
     if (this.isAdminAuthenticated) {
-      authBox.style.display = 'none';
-      dashBox.style.display = 'block';
+      if (authBox) authBox.style.display = 'none';
+      if (dashBox) dashBox.style.display = 'block';
       this.renderAdminDashboard();
     } else {
-      authBox.style.display = 'block';
-      dashBox.style.display = 'none';
+      if (authBox) authBox.style.display = 'block';
+      if (dashBox) dashBox.style.display = 'none';
     }
   }
 
@@ -744,7 +774,7 @@ class App {
             <button class="btn-secondary btn-edit-student" data-id="${student.id}" style="padding: 0.4rem 0.7rem; font-size: 0.8rem;" title="Editar Aluno">
               <i class="fa-solid fa-pen"></i>
             </button>
-            <button class="btn-secondary btn-delete-student" data-id="${student.id}" style="padding: 0.4rem 0.7rem; font-size: 0.8rem; color: #ef4444;" title="Excluir Registro de Teste">
+            <button class="btn-secondary btn-delete-student" data-id="${student.id}" style="padding: 0.4rem 0.7rem; font-size: 0.8rem; color: #ef4444;" title="Excluir Registro">
               <i class="fa-solid fa-trash"></i>
             </button>
           </div>
