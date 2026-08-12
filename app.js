@@ -1,4 +1,4 @@
-// Main Application Controller - Seahaven UNIVC Feira de Carreiras 2026 (Com Supabase Realtime & Painel Admin)
+// Main Application Controller - Seahaven UNIVC Feira de Carreiras 2026 (Com Cadastro Individual & Grupo de Alunos)
 
 import { EVENT_INFO, STATIONS, INITIAL_TEAMS } from './data.js';
 import { sounds } from './audio.js';
@@ -57,13 +57,14 @@ class App {
     const savedStudent = localStorage.getItem('univc_current_student');
     if (savedStudent) {
       this.currentStudent = JSON.parse(savedStudent);
-      if (this.currentStudent.comboStreak === undefined) this.currentStudent.comboStreak = 0;
-      if (!this.currentStudent.stationErrors) this.currentStudent.stationErrors = {};
-      if (this.currentStudent.finalPuzzleErrors === undefined) this.currentStudent.finalPuzzleErrors = 0;
     } else {
       this.currentStudent = {
         id: 'student-user-' + Date.now(),
+        registrationType: 'individual',
         name: '',
+        groupName: '',
+        leaderName: '',
+        groupSize: 1,
         whatsapp: '',
         school: '',
         preferredCourse: '',
@@ -72,9 +73,6 @@ class App {
         unlockedFragments: [],
         solvedFinalPuzzle: false,
         score: 0,
-        comboStreak: 0,
-        stationErrors: {},
-        finalPuzzleErrors: 0,
         timeSpent: '0m',
         lastUpdate: new Date().toLocaleTimeString()
       };
@@ -125,6 +123,52 @@ class App {
         this.switchTab('admin');
       }
     });
+
+    // Registration Type Selector (Individual vs Group)
+    const btnInd = document.getElementById('btn-type-individual');
+    const btnGrp = document.getElementById('btn-type-group');
+    const groupFields = document.getElementById('group-fields-container');
+    const regTypeInput = document.getElementById('input-reg-type');
+    const labelName = document.getElementById('label-student-name');
+    const labelWa = document.getElementById('label-whatsapp');
+
+    if (btnInd && btnGrp) {
+      btnInd.addEventListener('click', () => {
+        sounds.playClick();
+        btnInd.classList.add('active');
+        btnInd.style.background = 'var(--univc-emerald-dark)';
+        btnInd.style.color = 'white';
+        btnInd.style.borderColor = 'var(--univc-emerald-mid)';
+
+        btnGrp.classList.remove('active');
+        btnGrp.style.background = '#f8fafc';
+        btnGrp.style.color = 'var(--text-dark)';
+        btnGrp.style.borderColor = 'var(--border-light)';
+
+        if (groupFields) groupFields.style.display = 'none';
+        if (regTypeInput) regTypeInput.value = 'individual';
+        if (labelName) labelName.textContent = 'Seu Nome Completo:';
+        if (labelWa) labelWa.innerHTML = '<i class="fa-brands fa-whatsapp" style="color: #22c55e;"></i> WhatsApp / Celular:';
+      });
+
+      btnGrp.addEventListener('click', () => {
+        sounds.playClick();
+        btnGrp.classList.add('active');
+        btnGrp.style.background = 'var(--univc-emerald-dark)';
+        btnGrp.style.color = 'white';
+        btnGrp.style.borderColor = 'var(--univc-emerald-mid)';
+
+        btnInd.classList.remove('active');
+        btnInd.style.background = '#f8fafc';
+        btnInd.style.color = 'var(--text-dark)';
+        btnInd.style.borderColor = 'var(--border-light)';
+
+        if (groupFields) groupFields.style.display = 'block';
+        if (regTypeInput) regTypeInput.value = 'group';
+        if (labelName) labelName.textContent = 'Nome do Líder (Responsável pelo Grupo):';
+        if (labelWa) labelWa.innerHTML = '<i class="fa-brands fa-whatsapp" style="color: #22c55e;"></i> WhatsApp / Celular do Líder:';
+      });
+    }
 
     // Nav Tabs
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -262,6 +306,24 @@ class App {
       e.preventDefault();
       this.handleAdminSaveEdit();
     });
+
+    // Admin Edit Modal Registration Type switch
+    document.getElementById('edit-registration-type')?.addEventListener('change', (e) => {
+      const type = e.target.value;
+      const groupBox = document.getElementById('edit-group-name-box');
+      const sizeBox = document.getElementById('edit-group-size-box');
+      const labelStudent = document.getElementById('edit-label-student-name');
+
+      if (type === 'group') {
+        if (groupBox) groupBox.style.display = 'block';
+        if (sizeBox) sizeBox.style.display = 'block';
+        if (labelStudent) labelStudent.textContent = 'Nome do Líder (Responsável):';
+      } else {
+        if (groupBox) groupBox.style.display = 'none';
+        if (sizeBox) sizeBox.style.display = 'none';
+        if (labelStudent) labelStudent.textContent = 'Nome do Aluno:';
+      }
+    });
   }
 
   switchTab(tabId) {
@@ -270,10 +332,6 @@ class App {
 
     document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
     document.getElementById(`view-${tabId}`)?.classList.add('active');
-
-    if (tabId === 'senha' && !this.finalPuzzleStartTime) {
-      this.finalPuzzleStartTime = Date.now();
-    }
 
     if (tabId === 'admin') {
       this.renderAdminView();
@@ -291,6 +349,7 @@ class App {
   }
 
   handleRegistration() {
+    const regType = document.getElementById('input-reg-type').value || 'individual';
     const studentName = document.getElementById('input-student-name').value.trim();
     const whatsapp = document.getElementById('input-whatsapp').value.trim();
     const school = document.getElementById('input-school').value;
@@ -298,11 +357,28 @@ class App {
 
     if (!studentName || !whatsapp || !school || !preferredCourse) return;
 
-    this.currentStudent.name = studentName;
+    if (regType === 'group') {
+      const groupName = document.getElementById('input-group-name').value.trim() || `Grupo de ${studentName}`;
+      const groupSize = parseInt(document.getElementById('input-group-size').value, 10) || 5;
+
+      this.currentStudent.registrationType = 'group';
+      this.currentStudent.name = groupName;
+      this.currentStudent.groupName = groupName;
+      this.currentStudent.leaderName = studentName;
+      this.currentStudent.groupSize = groupSize;
+      this.currentStudent.avatar = '👥';
+    } else {
+      this.currentStudent.registrationType = 'individual';
+      this.currentStudent.name = studentName;
+      this.currentStudent.groupName = '';
+      this.currentStudent.leaderName = studentName;
+      this.currentStudent.groupSize = 1;
+      this.currentStudent.avatar = '🎓';
+    }
+
     this.currentStudent.whatsapp = whatsapp;
     this.currentStudent.school = school;
     this.currentStudent.preferredCourse = preferredCourse;
-    this.currentStudent.avatar = '🎓';
 
     this.saveStudent();
     this.renderBadge();
@@ -316,11 +392,23 @@ class App {
 
   renderBadge() {
     if (!this.currentStudent || !this.currentStudent.name) return;
-    document.getElementById('badge-student-name').textContent = this.currentStudent.name || 'Nome do Aluno';
-    document.getElementById('badge-preferred-course').innerHTML = `<i class="fa-solid fa-graduation-cap"></i> Curso: ${this.currentStudent.preferredCourse || 'Não informado'}`;
+
+    const isGroup = this.currentStudent.registrationType === 'group';
+
+    document.getElementById('badge-type-tag').textContent = isGroup ? `LÍDER DA EQUIPE (${this.currentStudent.groupSize || 5} ALUNOS)` : 'PROTAGONISTA';
+
+    if (isGroup) {
+      document.getElementById('badge-student-name').textContent = this.currentStudent.groupName || this.currentStudent.name;
+      document.getElementById('badge-preferred-course').innerHTML = `<i class="fa-solid fa-user-shield"></i> Líder: ${this.currentStudent.leaderName} (${this.currentStudent.groupSize} membros)<br><i class="fa-solid fa-graduation-cap"></i> Curso: ${this.currentStudent.preferredCourse || 'Não informado'}`;
+      document.getElementById('badge-avatar-display').textContent = '👥';
+    } else {
+      document.getElementById('badge-student-name').textContent = this.currentStudent.name || 'Nome do Aluno';
+      document.getElementById('badge-preferred-course').innerHTML = `<i class="fa-solid fa-graduation-cap"></i> Curso: ${this.currentStudent.preferredCourse || 'Não informado'}`;
+      document.getElementById('badge-avatar-display').textContent = '🎓';
+    }
+
     document.getElementById('badge-school-name').innerHTML = `<i class="fa-solid fa-school"></i> Escola: ${this.currentStudent.school || '--'}`;
-    document.getElementById('badge-whatsapp').innerHTML = `<i class="fa-brands fa-whatsapp"></i> WhatsApp: ${this.currentStudent.whatsapp || '--'}`;
-    document.getElementById('badge-avatar-display').textContent = this.currentStudent.avatar || '🎓';
+    document.getElementById('badge-whatsapp').innerHTML = `<i class="fa-brands fa-whatsapp"></i> WhatsApp do Líder: ${this.currentStudent.whatsapp || '--'}`;
     
     // Short clean code
     const shortHash = this.currentStudent.id.substring(this.currentStudent.id.length - 4).toUpperCase();
@@ -340,20 +428,6 @@ class App {
     const sorted = [...this.teams].sort((a, b) => b.score - a.score);
     const rank = sorted.findIndex(t => t.id === this.currentStudent.id) + 1;
     document.getElementById('badge-ranking-pos').textContent = rank > 0 ? `#${rank}` : '#--';
-
-    // Update Combo Streak Badge
-    const comboBadge = document.getElementById('badge-combo-streak');
-    if (comboBadge) {
-      const combo = this.currentStudent.comboStreak || 0;
-      if (combo > 0) {
-        comboBadge.style.display = 'inline-flex';
-        comboBadge.innerHTML = `<i class="fa-solid fa-fire-flame-curved"></i> 🔥 Combo x${combo}`;
-        comboBadge.classList.add('combo-badge-active');
-      } else {
-        comboBadge.style.display = 'none';
-        comboBadge.classList.remove('combo-badge-active');
-      }
-    }
   }
 
   renderStationsGrid() {
@@ -428,29 +502,6 @@ class App {
     const completedList = this.currentStudent.completedStations || [];
     const isCompleted = completedList.includes(stationId);
 
-    // Dynamic Timer setup
-    if (this.stationTimerInterval) clearInterval(this.stationTimerInterval);
-    const timerContainer = document.getElementById('modal-station-timer');
-
-    if (isCompleted) {
-      if (timerContainer) timerContainer.style.display = 'none';
-    } else {
-      if (timerContainer) timerContainer.style.display = 'flex';
-      this.stationStartTime = Date.now();
-
-      const updateTimerUI = () => {
-        const elapsed = Math.floor((Date.now() - this.stationStartTime) / 1000);
-        const bonus = Math.max(0, 60 - elapsed);
-        const secEl = document.getElementById('modal-timer-seconds');
-        const bonusEl = document.getElementById('modal-timer-bonus');
-        if (secEl) secEl.textContent = `${elapsed}`;
-        if (bonusEl) bonusEl.textContent = `+${bonus}`;
-      };
-
-      updateTimerUI();
-      this.stationTimerInterval = setInterval(updateTimerUI, 1000);
-    }
-
     station.options.forEach(opt => {
       const btn = document.createElement('button');
       btn.className = 'option-btn';
@@ -483,116 +534,46 @@ class App {
     const feedbackBox = document.getElementById('modal-feedback-box');
     feedbackBox.style.display = 'block';
 
-    const completedList = this.currentStudent.completedStations || [];
-    const isCompleted = completedList.includes(station.id);
-
-    if (isCompleted) {
-      return;
-    }
-
-    if (!this.currentStudent.stationErrors) this.currentStudent.stationErrors = {};
-    if (this.currentStudent.stationErrors[station.id] === undefined) {
-      this.currentStudent.stationErrors[station.id] = 0;
-    }
-
     if (option.correct) {
       sounds.playSuccess();
       buttonElement.style.borderColor = 'var(--univc-lime)';
       buttonElement.style.background = '#f7fee7';
 
-      if (this.stationTimerInterval) {
-        clearInterval(this.stationTimerInterval);
-        this.stationTimerInterval = null;
-      }
-
-      // Calculations
-      const elapsedSeconds = Math.max(0, Math.floor((Date.now() - (this.stationStartTime || Date.now())) / 1000));
-      const timeBonus = Math.max(0, 60 - elapsedSeconds);
-      const errors = this.currentStudent.stationErrors[station.id] || 0;
-
-      let basePoints = 100;
-      if (errors === 1) basePoints = 70;
-      else if (errors >= 2) basePoints = 40;
-
-      let comboBonus = 0;
-      if (errors === 0) {
-        this.currentStudent.comboStreak = (this.currentStudent.comboStreak || 0) + 1;
-        comboBonus = this.currentStudent.comboStreak * 20;
-      } else {
-        this.currentStudent.comboStreak = 0;
-      }
-
-      const totalEarned = basePoints + timeBonus + comboBonus;
+      feedbackBox.style.background = 'var(--univc-emerald-dark)';
+      feedbackBox.style.color = 'white';
+      feedbackBox.innerHTML = `
+        <strong style="color: var(--univc-lime-bright); font-size: 1.1rem;"><i class="fa-solid fa-circle-check"></i> Resposta Correta! +100 Pontos!</strong>
+        <p style="margin-top: 0.35rem; font-size: 0.95rem;">Você desvendou a falha no local <strong>${station.location}</strong> e desbloqueou o fragmento: <span style="color: var(--univc-lime-bright); font-weight: 900; font-size: 1.2rem;">"${station.fragment}"</span>!</p>
+      `;
 
       if (!this.currentStudent.completedStations) this.currentStudent.completedStations = [];
       if (!this.currentStudent.unlockedFragments) this.currentStudent.unlockedFragments = [];
 
-      this.currentStudent.completedStations.push(station.id);
-      this.currentStudent.unlockedFragments.push(station.fragment);
-      this.currentStudent.score += totalEarned;
-
-      feedbackBox.style.background = 'var(--univc-emerald-dark)';
-      feedbackBox.style.color = 'white';
-      feedbackBox.style.border = '2px solid var(--univc-lime-bright)';
-      feedbackBox.innerHTML = `
-        <strong style="color: var(--univc-lime-bright); font-size: 1.15rem;"><i class="fa-solid fa-circle-check"></i> Resposta Correta! +${totalEarned} PTS!</strong>
-        <p style="margin-top: 0.35rem; font-size: 0.95rem; color: white;">Você desvendou a falha em <strong>${station.location}</strong> e desbloqueou: <span style="color: var(--univc-lime-bright); font-weight: 900; font-size: 1.15rem;">"${station.fragment}"</span></p>
-
-        <div class="score-breakdown-card">
-          <div style="font-weight: 800; font-family: var(--font-heading); color: var(--univc-lime-bright); margin-bottom: 0.5rem; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">
-            <i class="fa-solid fa-calculator"></i> Resumo da Pontuação Conquistada
-          </div>
-          <div class="score-breakdown-row">
-            <span class="score-breakdown-label"><i class="fa-solid fa-bullseye"></i> Pontos Base (${errors === 0 ? '1ª Tentativa' : errors === 1 ? '2ª Tentativa' : '3ª+ Tentativa'}):</span>
-            <span class="score-breakdown-val">+${basePoints} PTS</span>
-          </div>
-          <div class="score-breakdown-row">
-            <span class="score-breakdown-label"><i class="fa-solid fa-stopwatch"></i> Bônus de Tempo (${elapsedSeconds}s):</span>
-            <span class="score-breakdown-val">+${timeBonus} PTS</span>
-          </div>
-          ${comboBonus > 0 ? `
-          <div class="score-breakdown-row">
-            <span class="score-breakdown-label"><i class="fa-solid fa-fire" style="color: #f97316;"></i> Bônus Combo Streak (🔥 x${this.currentStudent.comboStreak}):</span>
-            <span class="score-breakdown-val" style="color: #fdba74;">+${comboBonus} PTS</span>
-          </div>` : ''}
-          <div class="score-total-box">
-            <span style="font-weight: 800; font-family: var(--font-heading); text-transform: uppercase; color: white;">Total Ganho:</span>
-            <span class="score-total-highlight">+${totalEarned} PTS</span>
-          </div>
-        </div>
-      `;
-
-      this.saveStudent();
-      this.updateHeaderBadges();
-      this.renderStationsGrid();
-      this.renderSentenceInventory();
+      // Update student progress
+      if (!this.currentStudent.completedStations.includes(station.id)) {
+        this.currentStudent.completedStations.push(station.id);
+        this.currentStudent.unlockedFragments.push(station.fragment);
+        this.currentStudent.score += 100;
+        this.saveStudent();
+        this.updateHeaderBadges();
+        this.renderStationsGrid();
+        this.renderSentenceInventory();
+      }
     } else {
       sounds.playError();
       buttonElement.style.borderColor = '#ef4444';
       buttonElement.style.background = '#fef2f2';
 
-      this.currentStudent.stationErrors[station.id] = (this.currentStudent.stationErrors[station.id] || 0) + 1;
-      this.currentStudent.comboStreak = 0; // Reset streak on error
-
       feedbackBox.style.background = '#fef2f2';
       feedbackBox.style.color = '#991b1b';
-      feedbackBox.style.border = '1px solid #fca5a5';
       feedbackBox.innerHTML = `
-        <strong><i class="fa-solid fa-circle-xmark"></i> Resposta Incorreta! (Tentativa #${this.currentStudent.stationErrors[station.id]})</strong>
+        <strong><i class="fa-solid fa-circle-xmark"></i> Resposta Incorreta!</strong>
         <p style="margin-top: 0.25rem; font-size: 0.9rem;">Dica do Instrutor: ${station.hint}</p>
-        <small style="display: block; margin-top: 0.35rem; color: #dc2626; font-weight: 700;">⚠️ O combo foi zerado e o valor base desta estação diminuiu para +${this.currentStudent.stationErrors[station.id] === 1 ? '70' : '40'} PTS.</small>
       `;
-
-      this.saveStudent();
-      this.updateHeaderBadges();
     }
   }
 
   closeModal() {
-    if (this.stationTimerInterval) {
-      clearInterval(this.stationTimerInterval);
-      this.stationTimerInterval = null;
-    }
     document.getElementById('modal-challenge').classList.remove('active');
   }
 
@@ -663,63 +644,20 @@ class App {
     const targetSentence = EVENT_INFO.fullPassword.join(' ');
     const userSentence = this.assembledWords.join(' ');
 
-    if (!this.currentStudent.finalPuzzleErrors) this.currentStudent.finalPuzzleErrors = 0;
-
     if (userSentence === targetSentence) {
       sounds.playFanfare();
-      const domeContainer = document.getElementById('dome-door-unlocked');
-      domeContainer.classList.add('active');
+      document.getElementById('dome-door-unlocked').classList.add('active');
 
       if (!this.currentStudent.solvedFinalPuzzle) {
-        const errors = this.currentStudent.finalPuzzleErrors || 0;
-        const penalty = errors * 50;
-        const basePoints = Math.max(200, 500 - penalty);
-        const elapsedSeconds = Math.max(0, Math.floor((Date.now() - (this.finalPuzzleStartTime || Date.now())) / 1000));
-        const timeBonus = Math.max(0, 100 - elapsedSeconds);
-        const totalEarned = basePoints + timeBonus;
-
         this.currentStudent.solvedFinalPuzzle = true;
-        this.currentStudent.score += totalEarned;
-
-        domeContainer.innerHTML = `
-          <div style="font-size: 3rem; margin-bottom: 0.5rem;">🎉🔓</div>
-          <h2 style="font-family: var(--font-heading); color: var(--univc-lime-bright); font-size: 2.2rem; margin-bottom: 0.5rem;">
-            PORTA DA CÚPULA DESTRAVADA!
-          </h2>
-          <p style="font-size: 1.1rem; max-width: 600px; margin: 0 auto 1.5rem auto; line-height: 1.6;">
-            Parabéns, Protagonista <strong>${this.currentStudent.name}</strong>! Você decodificou a fala icônica de Truman: 
-            <br><em style="color: var(--univc-lime-bright); font-size: 1.2rem; display: block; margin-top: 0.5rem;">"Caso eu não os veja: Bom dia, Boa tarde e Boa noite!"</em>
-          </p>
-          
-          <div class="score-breakdown-card" style="max-width: 500px; margin: 0 auto; text-align: left;">
-            <div style="font-weight: 800; font-family: var(--font-heading); color: var(--univc-lime-bright); margin-bottom: 0.5rem; text-transform: uppercase; font-size: 0.85rem;">
-              <i class="fa-solid fa-trophy"></i> Resumo da Pontuação do Enigma Final
-            </div>
-            <div class="score-breakdown-row">
-              <span class="score-breakdown-label"><i class="fa-solid fa-star"></i> Pontos Base (${errors} erro(s)):</span>
-              <span class="score-breakdown-val">+${basePoints} PTS</span>
-            </div>
-            <div class="score-breakdown-row">
-              <span class="score-breakdown-label"><i class="fa-solid fa-stopwatch"></i> Bônus Vel. Montagem (${elapsedSeconds}s):</span>
-              <span class="score-breakdown-val">+${timeBonus} PTS</span>
-            </div>
-            <div class="score-total-box">
-              <span style="font-weight: 800; font-family: var(--font-heading); text-transform: uppercase; color: white;">Total do Enigma:</span>
-              <span class="score-total-highlight">+${totalEarned} PTS</span>
-            </div>
-          </div>
-        `;
-
+        this.currentStudent.score += 500;
         this.saveStudent();
         this.updateHeaderBadges();
         this.renderLeaderboard();
       }
     } else {
       sounds.playError();
-      this.currentStudent.finalPuzzleErrors = (this.currentStudent.finalPuzzleErrors || 0) + 1;
-      this.saveStudent();
-
-      alert(`Frase incorreta ou incompleta! (Tentativa #${this.currentStudent.finalPuzzleErrors})\nSua montagem: "${userSentence || 'Vazia'}"\n\nPenalidade: -50 pts no valor base do enigma final.\nDica: Reúna os 10 fragmentos na ordem das estações 1 a 10.`);
+      alert(`Frase incorreta ou incompleta!\nSua montagem: "${userSentence || 'Vazia'}"\nDica: Reúna os 10 fragmentos das 10 estações na ordem das estações 1 a 10.`);
     }
   }
 
@@ -738,6 +676,8 @@ class App {
     if (this.searchQuery) {
       sorted = sorted.filter(t => 
         (t.name && t.name.toLowerCase().includes(this.searchQuery)) || 
+        (t.groupName && t.groupName.toLowerCase().includes(this.searchQuery)) || 
+        (t.leaderName && t.leaderName.toLowerCase().includes(this.searchQuery)) || 
         (t.school && t.school.toLowerCase().includes(this.searchQuery)) ||
         (t.preferredCourse && t.preferredCourse.toLowerCase().includes(this.searchQuery))
       );
@@ -754,14 +694,18 @@ class App {
 
     top3.forEach((team, index) => {
       const posInfo = podiumPositions[index] || { class: '', rank: `${index + 1}º`, badgeIcon: `${index + 1}` };
+      const isGroup = team.registrationType === 'group';
+      const displayName = isGroup ? (team.groupName || team.name) : (team.name || 'Aluno');
+      const subInfo = isGroup ? `Líder: ${team.leaderName} (${team.groupSize} membros)` : team.preferredCourse;
+
       const card = document.createElement('div');
       card.className = `podium-card ${posInfo.class}`;
       card.innerHTML = `
         <div class="podium-badge">${posInfo.badgeIcon}</div>
-        <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">${team.avatar || '🎓'}</div>
-        <div class="podium-team-name">${team.name || 'Aluno'}</div>
+        <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">${isGroup ? '👥' : (team.avatar || '🎓')}</div>
+        <div class="podium-team-name">${displayName}</div>
         <div style="font-size: 0.8rem; color: var(--univc-emerald-mid); font-weight: 800; margin-bottom: 0.25rem;">
-          <i class="fa-solid fa-graduation-cap"></i> ${team.preferredCourse || 'Geral'}
+          <i class="fa-solid fa-graduation-cap"></i> ${subInfo || 'Geral'}
         </div>
         <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; margin-bottom: 0.5rem;">${team.school || '--'}</div>
         <div class="podium-score">${team.score} PTS</div>
@@ -777,7 +721,7 @@ class App {
       tableBody.innerHTML = `
         <tr>
           <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-            Nenhum aluno cadastrado ainda. Seja o primeiro a se registrar!
+            Nenhum aluno ou grupo cadastrado ainda. Seja o primeiro a se registrar!
           </td>
         </tr>
       `;
@@ -786,6 +730,10 @@ class App {
 
     sorted.forEach((team, index) => {
       const isUser = team.id === this.currentStudent.id;
+      const isGroup = team.registrationType === 'group';
+      const displayName = isGroup ? (team.groupName || team.name) : (team.name || 'Aluno');
+      const leaderSub = isGroup ? `Líder: ${team.leaderName} • ${team.groupSize} Integrantes • ${team.preferredCourse}` : team.preferredCourse;
+
       const tr = document.createElement('tr');
       if (isUser) tr.style.background = '#f7fee7';
 
@@ -793,10 +741,10 @@ class App {
         <td><span class="rank-number">${index + 1}º</span></td>
         <td>
           <div style="display: flex; align-items: center; gap: 0.6rem;">
-            <span style="font-size: 1.4rem;">${team.avatar || '🎓'}</span>
+            <span style="font-size: 1.4rem;">${isGroup ? '👥' : (team.avatar || '🎓')}</span>
             <div>
-              <strong>${team.name || 'Aluno'}</strong> ${isUser ? '<span style="background: var(--univc-lime); color: var(--univc-emerald-dark); font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 900; margin-left: 0.4rem;">VOCÊ</span>' : ''}
-              <div style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-graduation-cap"></i> ${team.preferredCourse || 'Não informado'}</div>
+              <strong>${displayName}</strong> ${isGroup ? '<span style="background: var(--univc-emerald-dark); color: white; font-size: 0.65rem; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 800; margin-left: 0.3rem;">GRUPO</span>' : ''} ${isUser ? '<span style="background: var(--univc-lime); color: var(--univc-emerald-dark); font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 900; margin-left: 0.4rem;">VOCÊ</span>' : ''}
+              <div style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-user-shield"></i> ${leaderSub || 'Não informado'}</div>
             </div>
           </div>
         </td>
@@ -823,13 +771,17 @@ class App {
     const top3 = sorted.slice(0, 3);
     top3.forEach((team, index) => {
       const ranks = ['1º LUGAR', '2º LUGAR', '3º LUGAR'];
+      const isGroup = team.registrationType === 'group';
+      const displayName = isGroup ? (team.groupName || team.name) : (team.name || 'Aluno');
+      const subInfo = isGroup ? `Líder: ${team.leaderName} (${team.groupSize} Alunos)` : team.preferredCourse;
+
       const card = document.createElement('div');
       card.className = `telao-podium-card ${index === 0 ? 'first' : ''}`;
       card.innerHTML = `
         <div style="font-size: 0.9rem; font-weight: 900; color: var(--univc-lime-bright); letter-spacing: 0.1em; margin-bottom: 0.5rem;">${ranks[index]}</div>
-        <div style="font-size: 3.5rem; margin-bottom: 0.5rem;">${team.avatar || '🎓'}</div>
-        <h3 style="font-family: var(--font-heading); font-size: 1.8rem; color: white;">${team.name || 'Aluno'}</h3>
-        <p style="color: var(--univc-lime-bright); font-size: 1.05rem; font-weight: 700;"><i class="fa-solid fa-graduation-cap"></i> ${team.preferredCourse || 'Geral'}</p>
+        <div style="font-size: 3.5rem; margin-bottom: 0.5rem;">${isGroup ? '👥' : (team.avatar || '🎓')}</div>
+        <h3 style="font-family: var(--font-heading); font-size: 1.8rem; color: white;">${displayName}</h3>
+        <p style="color: var(--univc-lime-bright); font-size: 1.05rem; font-weight: 700;"><i class="fa-solid fa-graduation-cap"></i> ${subInfo || 'Geral'}</p>
         <p style="color: rgba(255,255,255,0.8); font-size: 1rem; margin-bottom: 1rem;">${team.school || '--'}</p>
         <div style="font-family: var(--font-heading); font-size: 2.5rem; font-weight: 900; color: var(--univc-lime-bright);">${team.score} PTS</div>
       `;
@@ -839,12 +791,16 @@ class App {
     // Telão Table
     tableBody.innerHTML = '';
     sorted.slice(3, 15).forEach((team, index) => {
+      const isGroup = team.registrationType === 'group';
+      const displayName = isGroup ? (team.groupName || team.name) : (team.name || 'Aluno');
+      const subInfo = isGroup ? `Líder: ${team.leaderName} • ${team.groupSize} Integrantes` : (team.preferredCourse || '');
+
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td style="font-weight: 900; color: var(--univc-lime-bright);">${index + 4}º</td>
         <td>
-          <strong>${team.avatar || '🎓'} ${team.name || 'Aluno'}</strong>
-          <div style="font-size: 0.85rem; color: var(--univc-lime-bright); opacity: 0.9;"><i class="fa-solid fa-graduation-cap"></i> ${team.preferredCourse || ''}</div>
+          <strong>${isGroup ? '👥' : (team.avatar || '🎓')} ${displayName}</strong>
+          <div style="font-size: 0.85rem; color: var(--univc-lime-bright); opacity: 0.9;"><i class="fa-solid fa-graduation-cap"></i> ${subInfo}</div>
         </td>
         <td style="opacity: 0.85;">${team.school || '--'}</td>
         <td style="text-align: center; font-weight: bold; color: var(--univc-lime);">${team.completedStations?.length || 0} / 10</td>
@@ -878,14 +834,13 @@ class App {
     if (!tableBody) return;
 
     // Stats
-    const totalStudents = this.teams.length;
-    const totalScoreSum = this.teams.reduce((acc, t) => acc + (t.score || 0), 0);
-    const avgScore = totalStudents > 0 ? Math.round(totalScoreSum / totalStudents) : 0;
+    const totalRegistrations = this.teams.length;
+    const totalPeopleEstimated = this.teams.reduce((acc, t) => acc + (parseInt(t.groupSize, 10) || 1), 0);
     const uniqueSchools = new Set(this.teams.map(t => t.school).filter(Boolean)).size;
     const completedPasswords = this.teams.filter(t => t.solvedFinalPuzzle).length;
 
-    document.getElementById('stat-total-students').textContent = totalStudents;
-    document.getElementById('stat-avg-score').textContent = `${avgScore} PTS`;
+    document.getElementById('stat-total-students').textContent = totalRegistrations;
+    document.getElementById('stat-total-people').textContent = totalPeopleEstimated;
     document.getElementById('stat-total-schools').textContent = uniqueSchools;
     document.getElementById('stat-completed-passwords').textContent = completedPasswords;
 
@@ -895,6 +850,8 @@ class App {
     if (this.adminSearchQuery) {
       sorted = sorted.filter(t => 
         (t.name && t.name.toLowerCase().includes(this.adminSearchQuery)) ||
+        (t.groupName && t.groupName.toLowerCase().includes(this.adminSearchQuery)) ||
+        (t.leaderName && t.leaderName.toLowerCase().includes(this.adminSearchQuery)) ||
         (t.whatsapp && t.whatsapp.toLowerCase().includes(this.adminSearchQuery)) ||
         (t.school && t.school.toLowerCase().includes(this.adminSearchQuery)) ||
         (t.preferredCourse && t.preferredCourse.toLowerCase().includes(this.adminSearchQuery))
@@ -906,35 +863,45 @@ class App {
     if (sorted.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-            Nenhum aluno cadastrado no momento. Os cadastros realizados aparecerão aqui em tempo real.
+          <td colspan="9" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+            Nenhum registro cadastrado no momento. Os cadastros realizados aparecerão aqui em tempo real.
           </td>
         </tr>
       `;
       return;
     }
 
-    sorted.forEach((student, index) => {
+    sorted.forEach((team, index) => {
+      const isGroup = team.registrationType === 'group';
+      const displayName = isGroup ? (team.groupName || team.name) : (team.name || 'Aluno');
+      const leaderName = isGroup ? team.leaderName : team.name;
+      const groupSize = isGroup ? (team.groupSize || 1) : 1;
+
       const tr = document.createElement('tr');
-      const cleanDigits = (student.whatsapp || '').replace(/\D/g, '');
+      const cleanDigits = (team.whatsapp || '').replace(/\D/g, '');
       const waLink = cleanDigits ? `https://wa.me/55${cleanDigits}` : '#';
 
       tr.innerHTML = `
-        <td><strong class="rank-number">${index + 1}º</strong></td>
-        <td><strong>${student.name || 'Aluno'}</strong></td>
         <td>
-          ${cleanDigits ? `<a href="${waLink}" target="_blank" style="color: #16a34a; font-weight: bold; text-decoration: none;"><i class="fa-brands fa-whatsapp"></i> ${student.whatsapp}</a>` : '<span style="color: #94a3b8;">--</span>'}
+          <span style="font-weight: 800; font-size: 0.8rem; padding: 0.2rem 0.5rem; border-radius: 4px; ${isGroup ? 'background: var(--univc-emerald-dark); color: white;' : 'background: #e2e8f0; color: var(--text-dark);'}">
+            ${isGroup ? '👥 GRUPO' : '👤 INDIVIDUAL'}
+          </span>
         </td>
-        <td>${student.school || '--'}</td>
-        <td><strong style="color: var(--univc-emerald-dark);">${student.preferredCourse || 'Não informado'}</strong></td>
-        <td>${student.completedStations?.length || 0}/10</td>
-        <td><strong style="color: var(--univc-emerald-mid); font-size: 1.05rem;">${student.score} PTS</strong></td>
+        <td><strong>${displayName}</strong></td>
+        <td>${leaderName}</td>
+        <td><strong style="color: var(--univc-emerald-dark);">${groupSize} pessoa(s)</strong></td>
+        <td>
+          ${cleanDigits ? `<a href="${waLink}" target="_blank" style="color: #16a34a; font-weight: bold; text-decoration: none;"><i class="fa-brands fa-whatsapp"></i> ${team.whatsapp}</a>` : '<span style="color: #94a3b8;">--</span>'}
+        </td>
+        <td>${team.school || '--'}</td>
+        <td><strong style="color: var(--univc-emerald-dark);">${team.preferredCourse || 'Não informado'}</strong></td>
+        <td><strong style="color: var(--univc-emerald-mid); font-size: 1.05rem;">${team.score} PTS</strong></td>
         <td style="text-align: center;">
           <div style="display: flex; gap: 0.5rem; justify-content: center;">
-            <button class="btn-secondary btn-edit-student" data-id="${student.id}" style="padding: 0.4rem 0.7rem; font-size: 0.8rem;" title="Editar Aluno">
+            <button class="btn-secondary btn-edit-student" data-id="${team.id}" style="padding: 0.4rem 0.7rem; font-size: 0.8rem;" title="Editar Registro">
               <i class="fa-solid fa-pen"></i>
             </button>
-            <button class="btn-secondary btn-delete-student" data-id="${student.id}" style="padding: 0.4rem 0.7rem; font-size: 0.8rem; color: #ef4444;" title="Excluir Registro">
+            <button class="btn-secondary btn-delete-student" data-id="${team.id}" style="padding: 0.4rem 0.7rem; font-size: 0.8rem; color: #ef4444;" title="Excluir Registro">
               <i class="fa-solid fa-trash"></i>
             </button>
           </div>
@@ -942,24 +909,30 @@ class App {
       `;
 
       tr.querySelector('.btn-edit-student')?.addEventListener('click', () => {
-        this.openAdminEditModal(student);
+        this.openAdminEditModal(team);
       });
 
       tr.querySelector('.btn-delete-student')?.addEventListener('click', () => {
-        this.handleAdminDeleteStudent(student);
+        this.handleAdminDeleteStudent(team);
       });
 
       tableBody.appendChild(tr);
     });
   }
 
-  openAdminEditModal(student) {
-    document.getElementById('edit-student-id').value = student.id;
-    document.getElementById('edit-student-name').value = student.name || '';
-    document.getElementById('edit-student-whatsapp').value = student.whatsapp || '';
-    document.getElementById('edit-student-school').value = student.school || '';
-    document.getElementById('edit-student-course').value = student.preferredCourse || '';
-    document.getElementById('edit-student-score').value = student.score || 0;
+  openAdminEditModal(team) {
+    document.getElementById('edit-student-id').value = team.id;
+    document.getElementById('edit-registration-type').value = team.registrationType || 'individual';
+    document.getElementById('edit-group-name').value = team.groupName || '';
+    document.getElementById('edit-student-name').value = team.leaderName || team.name || '';
+    document.getElementById('edit-group-size').value = team.groupSize || 1;
+    document.getElementById('edit-student-whatsapp').value = team.whatsapp || '';
+    document.getElementById('edit-student-school').value = team.school || '';
+    document.getElementById('edit-student-course').value = team.preferredCourse || '';
+    document.getElementById('edit-student-score').value = team.score || 0;
+
+    // Trigger change event to set fields visibility
+    document.getElementById('edit-registration-type').dispatchEvent(new Event('change'));
 
     document.getElementById('modal-admin-edit').classList.add('active');
   }
@@ -973,7 +946,18 @@ class App {
     const idx = this.teams.findIndex(t => t.id === id);
 
     if (idx >= 0) {
-      this.teams[idx].name = document.getElementById('edit-student-name').value.trim();
+      const regType = document.getElementById('edit-registration-type').value;
+      const leaderName = document.getElementById('edit-student-name').value.trim();
+      const groupName = document.getElementById('edit-group-name').value.trim();
+      const groupSize = parseInt(document.getElementById('edit-group-size').value, 10) || 1;
+
+      this.teams[idx].registrationType = regType;
+      this.teams[idx].leaderName = leaderName;
+      this.teams[idx].groupName = groupName;
+      this.teams[idx].groupSize = groupSize;
+      this.teams[idx].name = regType === 'group' ? (groupName || `Grupo de ${leaderName}`) : leaderName;
+      this.teams[idx].avatar = regType === 'group' ? '👥' : '🎓';
+
       this.teams[idx].whatsapp = document.getElementById('edit-student-whatsapp').value.trim();
       this.teams[idx].school = document.getElementById('edit-student-school').value.trim();
       this.teams[idx].preferredCourse = document.getElementById('edit-student-course').value.trim();
@@ -1015,12 +999,15 @@ class App {
       return;
     }
 
-    const headers = ["Posicao", "Nome_Aluno", "WhatsApp", "Escola_Origem", "Curso_Pretendido", "Estacoes_Concluidas", "Senha_Final", "Pontuacao", "Ultima_Atualizacao"];
+    const headers = ["Posicao", "Tipo_Cadastro", "Nome_Participante_Ou_Grupo", "Lider_Responsavel", "Qtd_Alunos_Grupo", "WhatsApp_Lider", "Escola_Origem", "Curso_Pretendido", "Estacoes_Concluidas", "Senha_Final", "Pontuacao", "Ultima_Atualizacao"];
     const sorted = [...this.teams].sort((a, b) => b.score - a.score);
 
     const rows = sorted.map((t, idx) => [
       idx + 1,
-      `"${(t.name || '').replace(/"/g, '""')}"`,
+      `"${t.registrationType === 'group' ? 'GRUPO' : 'INDIVIDUAL'}"`,
+      `"${((t.registrationType === 'group' ? t.groupName : t.name) || '').replace(/"/g, '""')}"`,
+      `"${((t.registrationType === 'group' ? t.leaderName : t.name) || '').replace(/"/g, '""')}"`,
+      t.registrationType === 'group' ? (t.groupSize || 1) : 1,
       `"${(t.whatsapp || '').replace(/"/g, '""')}"`,
       `"${(t.school || '').replace(/"/g, '""')}"`,
       `"${(t.preferredCourse || '').replace(/"/g, '""')}"`,

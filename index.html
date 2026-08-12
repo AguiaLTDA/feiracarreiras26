@@ -79,15 +79,42 @@
       <div class="card-grid">
         <!-- Form -->
         <div class="custom-card">
-          <h3><i class="fa-solid fa-user-plus"></i> Registrar Aluno</h3>
+          <h3><i class="fa-solid fa-user-plus"></i> Registrar Participante</h3>
+          
+          <!-- Selector: Individual vs Grupo -->
+          <div class="registration-type-selector" style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem;">
+            <button type="button" id="btn-type-individual" class="reg-type-btn active" style="flex: 1; padding: 0.65rem 1rem; border-radius: 8px; font-weight: 700; border: 2px solid var(--univc-emerald-mid); background: var(--univc-emerald-dark); color: white; cursor: pointer; transition: all 0.2s ease;">
+              <i class="fa-solid fa-user"></i> Aluno Individual
+            </button>
+            <button type="button" id="btn-type-group" class="reg-type-btn" style="flex: 1; padding: 0.65rem 1rem; border-radius: 8px; font-weight: 700; border: 2px solid var(--border-light); background: #f8fafc; color: var(--text-dark); cursor: pointer; transition: all 0.2s ease;">
+              <i class="fa-solid fa-users"></i> Grupo de Alunos
+            </button>
+          </div>
+
           <form id="form-registration">
+            <input type="hidden" id="input-reg-type" value="individual">
+
+            <!-- Campos Exclusivos para Grupos -->
+            <div id="group-fields-container" style="display: none; background: rgba(6, 78, 59, 0.04); border: 1.5px dashed var(--univc-emerald-mid); border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
+              <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label for="input-group-name" style="font-weight: 800; color: var(--univc-emerald-dark);"><i class="fa-solid fa-users-rectangle" style="color: var(--univc-emerald-mid);"></i> Nome do Grupo / Equipe:</label>
+                <input type="text" id="input-group-name" class="form-control" placeholder="Ex: Equipe Truman (Turma 3º A)">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="input-group-size" style="font-weight: 800; color: var(--univc-emerald-dark);"><i class="fa-solid fa-users" style="color: var(--univc-emerald-mid);"></i> Quantidade de Alunos no Grupo:</label>
+                <input type="number" id="input-group-size" class="form-control" min="2" max="30" value="5" placeholder="Ex: 5">
+              </div>
+            </div>
+
+            <!-- Nome do Aluno ou Nome do Líder -->
             <div class="form-group">
-              <label for="input-student-name">Seu Nome Completo:</label>
+              <label for="input-student-name" id="label-student-name">Seu Nome Completo:</label>
               <input type="text" id="input-student-name" class="form-control" placeholder="Ex: Felipe Oliveira" required>
             </div>
             
             <div class="form-group">
-              <label for="input-whatsapp"><i class="fa-brands fa-whatsapp" style="color: #22c55e;"></i> WhatsApp / Celular:</label>
+              <label for="input-whatsapp" id="label-whatsapp"><i class="fa-brands fa-whatsapp" style="color: #22c55e;"></i> WhatsApp / Celular:</label>
               <input type="tel" id="input-whatsapp" class="form-control" placeholder="(27) 99999-9999" required>
             </div>
 
@@ -142,7 +169,7 @@
               </select>
             </div>
 
-            <button type="submit" class="btn-primary mt-2">
+            <button type="submit" class="btn-primary mt-2" id="btn-submit-registration">
               <i class="fa-solid fa-circle-check"></i> Iniciar Trilha e Gerar Crachá
             </button>
           </form>
@@ -156,7 +183,7 @@
                 <strong style="display: block; font-family: var(--font-heading); font-size: 1.1rem;">CRACHÁ DE ELENCO SEAHAVEN</strong>
                 <small style="opacity: 0.8;">UNIVC FEIRA DE CARREIRAS 2026</small>
               </div>
-              <span class="badge-tag">PROTAGONISTA</span>
+              <span class="badge-tag" id="badge-type-tag">PROTAGONISTA</span>
             </div>
             
             <div class="badge-body">
@@ -286,7 +313,7 @@
           <h2 style="font-family: var(--font-heading); font-size: 2rem; color: var(--univc-emerald-dark);">
             <i class="fa-solid fa-trophy"></i> Ranking Geral — Feira de Carreiras 2026
           </h2>
-          <p style="color: var(--text-muted); font-weight: 600;">Classificação oficial dos alunos visitantes em tempo real.</p>
+          <p style="color: var(--text-muted); font-weight: 600;">Classificação oficial dos alunos e grupos visitantes em tempo real.</p>
         </div>
 
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
@@ -306,7 +333,7 @@
         <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; justify-content: space-between;">
           <div style="display: flex; gap: 0.75rem; align-items: center; flex: 1; min-width: 280px;">
             <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted);"></i>
-            <input type="text" id="search-ranking" class="form-control" placeholder="Buscar por aluno ou escola...">
+            <input type="text" id="search-ranking" class="form-control" placeholder="Buscar por aluno, grupo ou escola...">
           </div>
           <div style="display: flex; gap: 0.75rem; align-items: center;">
             <label for="filter-school-ranking" style="font-weight: 700; font-size: 0.9rem;">Escola:</label>
@@ -345,7 +372,7 @@
           <thead>
             <tr>
               <th>Posição</th>
-              <th>Aluno / Curso Pretendido</th>
+              <th>Participante / Grupo (Líder)</th>
               <th>Escola de Origem</th>
               <th>Estações</th>
               <th>Fragmentos</th>
@@ -387,12 +414,12 @@
             <h2 style="font-family: var(--font-heading); font-size: 2rem; color: var(--univc-emerald-dark);">
               <i class="fa-solid fa-user-gear"></i> Painel de Administração — UNIVC 2026
             </h2>
-            <p style="color: var(--text-muted); font-weight: 600;">Gerenciamento completo dos alunos, contatos de WhatsApp, edição e relatórios.</p>
+            <p style="color: var(--text-muted); font-weight: 600;">Gerenciamento completo de alunos individuais e grupos, contatos de líderes e relatórios.</p>
           </div>
 
           <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
             <button id="btn-admin-export-csv" class="btn-lime" style="padding: 0.75rem 1.25rem;">
-              <i class="fa-solid fa-file-csv"></i> Exportar Alunos (Excel / CSV)
+              <i class="fa-solid fa-file-csv"></i> Exportar Participantes (Excel / CSV)
             </button>
             <button id="btn-admin-clear-db" class="btn-secondary" style="color: #ef4444; border: 1px solid #fca5a5;">
               <i class="fa-solid fa-triangle-exclamation"></i> Zerar Base (Pré-Evento)
@@ -406,12 +433,12 @@
         <!-- Admin Quick Stats -->
         <div class="card-grid" style="margin-bottom: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
           <div class="custom-card" style="padding: 1.25rem; text-align: center;">
-            <small style="color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total de Alunos</small>
+            <small style="color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total de Registros</small>
             <h3 id="stat-total-students" style="font-size: 2rem; color: var(--univc-emerald-dark); margin: 0.25rem 0;">0</h3>
           </div>
           <div class="custom-card" style="padding: 1.25rem; text-align: center;">
-            <small style="color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Média de Pontuação</small>
-            <h3 id="stat-avg-score" style="font-size: 2rem; color: var(--univc-lime-bright); margin: 0.25rem 0;">0 PTS</h3>
+            <small style="color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total de Pessoas Estimado</small>
+            <h3 id="stat-total-people" style="font-size: 2rem; color: var(--univc-lime-bright); margin: 0.25rem 0;">0</h3>
           </div>
           <div class="custom-card" style="padding: 1.25rem; text-align: center;">
             <small style="color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Escolas Representadas</small>
@@ -428,7 +455,7 @@
           <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; justify-content: space-between;">
             <div style="display: flex; gap: 0.75rem; align-items: center; flex: 1; min-width: 280px;">
               <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted);"></i>
-              <input type="text" id="search-admin" class="form-control" placeholder="Filtrar por nome, WhatsApp, escola ou curso...">
+              <input type="text" id="search-admin" class="form-control" placeholder="Filtrar por participante, líder, grupo, WhatsApp, escola...">
             </div>
           </div>
         </div>
@@ -438,12 +465,13 @@
           <table class="ranking-table">
             <thead>
               <tr>
-                <th>Posição</th>
-                <th>Nome do Aluno</th>
-                <th>WhatsApp</th>
-                <th>Escola de Origem</th>
+                <th>Tipo</th>
+                <th>Nome / Grupo</th>
+                <th>Líder Responsável</th>
+                <th>Qtd Pessoas</th>
+                <th>WhatsApp do Líder</th>
+                <th>Escola</th>
                 <th>Curso Pretendido</th>
-                <th>Estações</th>
                 <th>Pontos</th>
                 <th style="text-align: center;">Ações</th>
               </tr>
@@ -487,7 +515,7 @@
       <thead>
         <tr style="color: var(--univc-lime-bright); text-transform: uppercase; font-family: var(--font-heading); font-size: 1.1rem;">
           <th style="text-align: left; padding-left: 1.75rem;">Pos</th>
-          <th style="text-align: left;">Aluno / Curso Pretendido</th>
+          <th style="text-align: left;">Participante / Grupo (Líder)</th>
           <th style="text-align: left;">Escola</th>
           <th style="text-align: center;">Estações Concluídas</th>
           <th style="text-align: right; padding-right: 1.75rem;">Pontos Totais</th>
@@ -542,24 +570,42 @@
     </div>
   </div>
 
-  <!-- Admin Edit Student Modal -->
+  <!-- Admin Edit Student/Group Modal -->
   <div id="modal-admin-edit" class="modal-backdrop">
     <div class="modal-container" style="max-width: 520px;">
       <div class="modal-header">
-        <h3><i class="fa-solid fa-user-pen"></i> Editar Aluno</h3>
+        <h3><i class="fa-solid fa-user-pen"></i> Editar Registro</h3>
         <button id="btn-close-admin-edit" class="btn-close">&times;</button>
       </div>
 
       <form id="form-admin-edit-student">
         <input type="hidden" id="edit-student-id">
-        
+
         <div class="form-group">
-          <label>Nome do Aluno:</label>
-          <input type="text" id="edit-student-name" class="form-control" required>
+          <label>Tipo de Cadastro:</label>
+          <select id="edit-registration-type" class="form-control">
+            <option value="individual">👤 Aluno Individual</option>
+            <option value="group">👥 Grupo de Alunos</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="edit-group-name-box">
+          <label>Nome do Grupo / Equipe:</label>
+          <input type="text" id="edit-group-name" class="form-control">
         </div>
 
         <div class="form-group">
-          <label>WhatsApp / Celular:</label>
+          <label id="edit-label-student-name">Nome do Aluno / Líder:</label>
+          <input type="text" id="edit-student-name" class="form-control" required>
+        </div>
+
+        <div class="form-group" id="edit-group-size-box">
+          <label>Quantidade de Alunos no Grupo:</label>
+          <input type="number" id="edit-group-size" class="form-control" min="1" max="50">
+        </div>
+
+        <div class="form-group">
+          <label>WhatsApp do Líder / Aluno:</label>
           <input type="tel" id="edit-student-whatsapp" class="form-control" required>
         </div>
 

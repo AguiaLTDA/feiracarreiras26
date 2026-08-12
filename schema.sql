@@ -1,14 +1,18 @@
 -- ==============================================================================
 -- SCRIPT DE BANCO DE DADOS SUPABASE — FEIRA DE CARREIRAS UNIVC 2026 (OFICIAL)
 -- Tema: Seahaven UNIVC — O Último Episódio
+-- Suporte a Cadastro Individual e Grupo de Alunos
 -- ==============================================================================
--- Instruções: Execute este script no SQL Editor do seu Dashboard Supabase (https://supabase.com)
 
--- 1. Criar a tabela de alunos visitantes
+-- 1. Criar a tabela de alunos e grupos visitantes
 CREATE TABLE IF NOT EXISTS public.teams (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     student_name TEXT,
+    registration_type TEXT DEFAULT 'individual', -- 'individual' ou 'group'
+    group_name TEXT,
+    leader_name TEXT,
+    group_size INTEGER DEFAULT 1,
     whatsapp TEXT,
     preferred_course TEXT,
     school TEXT NOT NULL,
@@ -25,6 +29,10 @@ CREATE TABLE IF NOT EXISTS public.teams (
 -- Adicionar colunas caso a tabela já tenha sido criada anteriormente
 ALTER TABLE public.teams ADD COLUMN IF NOT EXISTS whatsapp TEXT;
 ALTER TABLE public.teams ADD COLUMN IF NOT EXISTS preferred_course TEXT;
+ALTER TABLE public.teams ADD COLUMN IF NOT EXISTS registration_type TEXT DEFAULT 'individual';
+ALTER TABLE public.teams ADD COLUMN IF NOT EXISTS group_name TEXT;
+ALTER TABLE public.teams ADD COLUMN IF NOT EXISTS leader_name TEXT;
+ALTER TABLE public.teams ADD COLUMN IF NOT EXISTS group_size INTEGER DEFAULT 1;
 
 -- 2. Criar Índices para ordenação ultra-rápida do Leaderboard no Telão
 CREATE INDEX IF NOT EXISTS idx_teams_score_desc ON public.teams (score DESC);
@@ -82,8 +90,3 @@ BEGIN
         ALTER PUBLICATION supabase_realtime ADD TABLE public.teams;
     END IF;
 END $$;
-
--- ==============================================================================
--- COMANDO OPCIONAL PARA ZERAR TODOS OS REGISTROS DE TESTE ANTES DO EVENTO:
--- TRUNCATE TABLE public.teams;
--- ==============================================================================

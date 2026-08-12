@@ -21,7 +21,7 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_URL.includes("SUA_SUPABASE_UR
 export const supabase = supabaseClient;
 
 /**
- * Salva ou atualiza o aluno no Supabase em tempo real
+ * Salva ou atualiza o aluno/grupo no Supabase em tempo real
  */
 export async function syncTeamToSupabase(student) {
   if (!supabase) return null;
@@ -30,10 +30,14 @@ export async function syncTeamToSupabase(student) {
     id: student.id,
     name: student.name,
     student_name: student.name,
+    registration_type: student.registrationType || 'individual',
+    group_name: student.groupName || '',
+    leader_name: student.leaderName || student.name,
+    group_size: student.groupSize || 1,
     whatsapp: student.whatsapp || '',
     preferred_course: student.preferredCourse || '',
     school: student.school,
-    avatar: student.avatar || '🎓',
+    avatar: student.avatar || (student.registrationType === 'group' ? '👥' : '🎓'),
     completed_stations: student.completedStations || [],
     unlocked_fragments: student.unlockedFragments || [],
     solved_final_puzzle: student.solvedFinalPuzzle || false,
@@ -50,7 +54,7 @@ export async function syncTeamToSupabase(student) {
     if (error) {
       console.error("Erro ao sincronizar com Supabase:", error);
     } else {
-      console.log("✅ Aluno sincronizado no Supabase!");
+      console.log("✅ Aluno/Grupo sincronizado no Supabase!");
     }
     return data;
   } catch (e) {
@@ -59,7 +63,7 @@ export async function syncTeamToSupabase(student) {
 }
 
 /**
- * Busca todos os alunos do Supabase
+ * Busca todos os alunos/grupos do Supabase
  */
 export async function fetchTeamsFromSupabase() {
   if (!supabase) return null;
@@ -80,10 +84,14 @@ export async function fetchTeamsFromSupabase() {
       id: row.id,
       name: row.name,
       studentName: row.student_name || row.name,
+      registrationType: row.registration_type || 'individual',
+      groupName: row.group_name || '',
+      leaderName: row.leader_name || row.student_name || row.name,
+      groupSize: row.group_size || 1,
       whatsapp: row.whatsapp || '',
       preferredCourse: row.preferred_course || '',
       school: row.school,
-      avatar: row.avatar || '🎓',
+      avatar: row.avatar || (row.registration_type === 'group' ? '👥' : '🎓'),
       completedStations: row.completed_stations || [],
       unlockedFragments: row.unlocked_fragments || [],
       solvedFinalPuzzle: row.solved_final_puzzle,
@@ -98,7 +106,7 @@ export async function fetchTeamsFromSupabase() {
 }
 
 /**
- * Exclui um aluno do Supabase por ID
+ * Exclui um aluno/grupo do Supabase por ID
  */
 export async function deleteTeamFromSupabase(id) {
   if (!supabase) return null;
@@ -112,7 +120,7 @@ export async function deleteTeamFromSupabase(id) {
     if (error) {
       console.error("Erro ao excluir aluno do Supabase:", error);
     } else {
-      console.log("🗑️ Aluno excluído do Supabase:", id);
+      console.log("🗑️ Aluno/Grupo excluído do Supabase:", id);
     }
     return data;
   } catch (e) {
