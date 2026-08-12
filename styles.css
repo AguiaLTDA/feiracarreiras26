@@ -82,6 +82,17 @@ body {
   gap: 1rem;
 }
 
+.brand-badge img {
+  height: 52px;
+  width: auto;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.brand-badge img:hover {
+  transform: scale(1.03);
+}
+
 .logo-icon {
   background: white;
   color: var(--univc-emerald-dark);
@@ -1025,3 +1036,79 @@ body.telao-mode main {
 .mt-4 { margin-top: 1rem; }
 .mb-4 { margin-bottom: 1rem; }
 .flex-between { display: flex; justify-content: space-between; align-items: center; }
+
+/* Dynamic Score Breakdown & Animations */
+.score-breakdown-card {
+  background: linear-gradient(135deg, #024026 0%, #064e3b 100%);
+  border: 2px solid var(--univc-lime);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-top: 1rem;
+  color: white;
+  box-shadow: 0 10px 25px -5px rgba(2, 64, 38, 0.4);
+}
+
+.score-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+  font-size: 0.95rem;
+}
+
+.score-breakdown-row:last-child {
+  border-bottom: none;
+}
+
+.score-breakdown-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.score-breakdown-val {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--univc-lime-bright);
+}
+
+.score-total-box {
+  background: rgba(132, 204, 22, 0.15);
+  border: 2px solid var(--univc-lime-bright);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  animation: scorePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.score-total-highlight {
+  font-family: var(--font-heading);
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: var(--univc-lime-bright);
+  text-shadow: 0 0 12px rgba(132, 204, 22, 0.5);
+}
+
+@keyframes scorePop {
+  0% { transform: scale(0.85); opacity: 0; }
+  70% { transform: scale(1.08); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Combo Streak Badge Animation */
+.combo-badge-active {
+  animation: comboPulse 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes comboPulse {
+  0% { transform: scale(1); box-shadow: 0 0 8px rgba(249, 115, 22, 0.4); }
+  100% { transform: scale(1.06); box-shadow: 0 0 16px rgba(249, 115, 22, 0.8); }
+}
+

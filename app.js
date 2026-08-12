@@ -57,6 +57,9 @@ class App {
     const savedStudent = localStorage.getItem('univc_current_student');
     if (savedStudent) {
       this.currentStudent = JSON.parse(savedStudent);
+      if (this.currentStudent.comboStreak === undefined) this.currentStudent.comboStreak = 0;
+      if (!this.currentStudent.stationErrors) this.currentStudent.stationErrors = {};
+      if (this.currentStudent.finalPuzzleErrors === undefined) this.currentStudent.finalPuzzleErrors = 0;
     } else {
       this.currentStudent = {
         id: 'student-user-' + Date.now(),
@@ -69,6 +72,9 @@ class App {
         unlockedFragments: [],
         solvedFinalPuzzle: false,
         score: 0,
+        comboStreak: 0,
+        stationErrors: {},
+        finalPuzzleErrors: 0,
         timeSpent: '0m',
         lastUpdate: new Date().toLocaleTimeString()
       };
@@ -265,6 +271,10 @@ class App {
     document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
     document.getElementById(`view-${tabId}`)?.classList.add('active');
 
+    if (tabId === 'senha' && !this.finalPuzzleStartTime) {
+      this.finalPuzzleStartTime = Date.now();
+    }
+
     if (tabId === 'admin') {
       this.renderAdminView();
     }
@@ -330,6 +340,20 @@ class App {
     const sorted = [...this.teams].sort((a, b) => b.score - a.score);
     const rank = sorted.findIndex(t => t.id === this.currentStudent.id) + 1;
     document.getElementById('badge-ranking-pos').textContent = rank > 0 ? `#${rank}` : '#--';
+
+    // Update Combo Streak Badge
+    const comboBadge = document.getElementById('badge-combo-streak');
+    if (comboBadge) {
+      const combo = this.currentStudent.comboStreak || 0;
+      if (combo > 0) {
+        comboBadge.style.display = 'inline-flex';
+        comboBadge.innerHTML = `<i class="fa-solid fa-fire-flame-curved"></i> 🔥 Combo x${combo}`;
+        comboBadge.classList.add('combo-badge-active');
+      } else {
+        comboBadge.style.display = 'none';
+        comboBadge.classList.remove('combo-badge-active');
+      }
+    }
   }
 
   renderStationsGrid() {
@@ -404,6 +428,29 @@ class App {
     const completedList = this.currentStudent.completedStations || [];
     const isCompleted = completedList.includes(stationId);
 
+    // Dynamic Timer setup
+    if (this.stationTimerInterval) clearInterval(this.stationTimerInterval);
+    const timerContainer = document.getElementById('modal-station-timer');
+
+    if (isCompleted) {
+      if (timerContainer) timerContainer.style.display = 'none';
+    } else {
+      if (timerContainer) timerContainer.style.display = 'flex';
+      this.stationStartTime = Date.now();
+
+      const updateTimerUI = () => {
+        const elapsed = Math.floor((Date.now() - this.stationStartTime) / 1000);
+        const bonus = Math.max(0, 60 - elapsed);
+        const secEl = document.getElementById('modal-timer-seconds');
+        const bonusEl = document.getElementById('modal-timer-bonus');
+        if (secEl) secEl.textContent = `${elapsed}`;
+        if (bonusEl) bonusEl.textContent = `+${bonus}`;
+      };
+
+      updateTimerUI();
+      this.stationTimerInterval = setInterval(updateTimerUI, 1000);
+    }
+
     station.options.forEach(opt => {
       const btn = document.createElement('button');
       btn.className = 'option-btn';
@@ -436,46 +483,116 @@ class App {
     const feedbackBox = document.getElementById('modal-feedback-box');
     feedbackBox.style.display = 'block';
 
+    const completedList = this.currentStudent.completedStations || [];
+    const isCompleted = completedList.includes(station.id);
+
+    if (isCompleted) {
+      return;
+    }
+
+    if (!this.currentStudent.stationErrors) this.currentStudent.stationErrors = {};
+    if (this.currentStudent.stationErrors[station.id] === undefined) {
+      this.currentStudent.stationErrors[station.id] = 0;
+    }
+
     if (option.correct) {
       sounds.playSuccess();
       buttonElement.style.borderColor = 'var(--univc-lime)';
       buttonElement.style.background = '#f7fee7';
 
-      feedbackBox.style.background = 'var(--univc-emerald-dark)';
-      feedbackBox.style.color = 'white';
-      feedbackBox.innerHTML = `
-        <strong style="color: var(--univc-lime-bright); font-size: 1.1rem;"><i class="fa-solid fa-circle-check"></i> Resposta Correta! +100 Pontos!</strong>
-        <p style="margin-top: 0.35rem; font-size: 0.95rem;">Você desvendou a falha no local <strong>${station.location}</strong> e desbloqueou o fragmento: <span style="color: var(--univc-lime-bright); font-weight: 900; font-size: 1.2rem;">"${station.fragment}"</span>!</p>
-      `;
+      if (this.stationTimerInterval) {
+        clearInterval(this.stationTimerInterval);
+        this.stationTimerInterval = null;
+      }
+
+      // Calculations
+      const elapsedSeconds = Math.max(0, Math.floor((Date.now() - (this.stationStartTime || Date.now())) / 1000));
+      const timeBonus = Math.max(0, 60 - elapsedSeconds);
+      const errors = this.currentStudent.stationErrors[station.id] || 0;
+
+      let basePoints = 100;
+      if (errors === 1) basePoints = 70;
+      else if (errors >= 2) basePoints = 40;
+
+      let comboBonus = 0;
+      if (errors === 0) {
+        this.currentStudent.comboStreak = (this.currentStudent.comboStreak || 0) + 1;
+        comboBonus = this.currentStudent.comboStreak * 20;
+      } else {
+        this.currentStudent.comboStreak = 0;
+      }
+
+      const totalEarned = basePoints + timeBonus + comboBonus;
 
       if (!this.currentStudent.completedStations) this.currentStudent.completedStations = [];
       if (!this.currentStudent.unlockedFragments) this.currentStudent.unlockedFragments = [];
 
-      // Update student progress
-      if (!this.currentStudent.completedStations.includes(station.id)) {
-        this.currentStudent.completedStations.push(station.id);
-        this.currentStudent.unlockedFragments.push(station.fragment);
-        this.currentStudent.score += 100;
-        this.saveStudent();
-        this.updateHeaderBadges();
-        this.renderStationsGrid();
-        this.renderSentenceInventory();
-      }
+      this.currentStudent.completedStations.push(station.id);
+      this.currentStudent.unlockedFragments.push(station.fragment);
+      this.currentStudent.score += totalEarned;
+
+      feedbackBox.style.background = 'var(--univc-emerald-dark)';
+      feedbackBox.style.color = 'white';
+      feedbackBox.style.border = '2px solid var(--univc-lime-bright)';
+      feedbackBox.innerHTML = `
+        <strong style="color: var(--univc-lime-bright); font-size: 1.15rem;"><i class="fa-solid fa-circle-check"></i> Resposta Correta! +${totalEarned} PTS!</strong>
+        <p style="margin-top: 0.35rem; font-size: 0.95rem; color: white;">Você desvendou a falha em <strong>${station.location}</strong> e desbloqueou: <span style="color: var(--univc-lime-bright); font-weight: 900; font-size: 1.15rem;">"${station.fragment}"</span></p>
+
+        <div class="score-breakdown-card">
+          <div style="font-weight: 800; font-family: var(--font-heading); color: var(--univc-lime-bright); margin-bottom: 0.5rem; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">
+            <i class="fa-solid fa-calculator"></i> Resumo da Pontuação Conquistada
+          </div>
+          <div class="score-breakdown-row">
+            <span class="score-breakdown-label"><i class="fa-solid fa-bullseye"></i> Pontos Base (${errors === 0 ? '1ª Tentativa' : errors === 1 ? '2ª Tentativa' : '3ª+ Tentativa'}):</span>
+            <span class="score-breakdown-val">+${basePoints} PTS</span>
+          </div>
+          <div class="score-breakdown-row">
+            <span class="score-breakdown-label"><i class="fa-solid fa-stopwatch"></i> Bônus de Tempo (${elapsedSeconds}s):</span>
+            <span class="score-breakdown-val">+${timeBonus} PTS</span>
+          </div>
+          ${comboBonus > 0 ? `
+          <div class="score-breakdown-row">
+            <span class="score-breakdown-label"><i class="fa-solid fa-fire" style="color: #f97316;"></i> Bônus Combo Streak (🔥 x${this.currentStudent.comboStreak}):</span>
+            <span class="score-breakdown-val" style="color: #fdba74;">+${comboBonus} PTS</span>
+          </div>` : ''}
+          <div class="score-total-box">
+            <span style="font-weight: 800; font-family: var(--font-heading); text-transform: uppercase; color: white;">Total Ganho:</span>
+            <span class="score-total-highlight">+${totalEarned} PTS</span>
+          </div>
+        </div>
+      `;
+
+      this.saveStudent();
+      this.updateHeaderBadges();
+      this.renderStationsGrid();
+      this.renderSentenceInventory();
     } else {
       sounds.playError();
       buttonElement.style.borderColor = '#ef4444';
       buttonElement.style.background = '#fef2f2';
 
+      this.currentStudent.stationErrors[station.id] = (this.currentStudent.stationErrors[station.id] || 0) + 1;
+      this.currentStudent.comboStreak = 0; // Reset streak on error
+
       feedbackBox.style.background = '#fef2f2';
       feedbackBox.style.color = '#991b1b';
+      feedbackBox.style.border = '1px solid #fca5a5';
       feedbackBox.innerHTML = `
-        <strong><i class="fa-solid fa-circle-xmark"></i> Resposta Incorreta!</strong>
+        <strong><i class="fa-solid fa-circle-xmark"></i> Resposta Incorreta! (Tentativa #${this.currentStudent.stationErrors[station.id]})</strong>
         <p style="margin-top: 0.25rem; font-size: 0.9rem;">Dica do Instrutor: ${station.hint}</p>
+        <small style="display: block; margin-top: 0.35rem; color: #dc2626; font-weight: 700;">⚠️ O combo foi zerado e o valor base desta estação diminuiu para +${this.currentStudent.stationErrors[station.id] === 1 ? '70' : '40'} PTS.</small>
       `;
+
+      this.saveStudent();
+      this.updateHeaderBadges();
     }
   }
 
   closeModal() {
+    if (this.stationTimerInterval) {
+      clearInterval(this.stationTimerInterval);
+      this.stationTimerInterval = null;
+    }
     document.getElementById('modal-challenge').classList.remove('active');
   }
 
@@ -546,20 +663,63 @@ class App {
     const targetSentence = EVENT_INFO.fullPassword.join(' ');
     const userSentence = this.assembledWords.join(' ');
 
+    if (!this.currentStudent.finalPuzzleErrors) this.currentStudent.finalPuzzleErrors = 0;
+
     if (userSentence === targetSentence) {
       sounds.playFanfare();
-      document.getElementById('dome-door-unlocked').classList.add('active');
+      const domeContainer = document.getElementById('dome-door-unlocked');
+      domeContainer.classList.add('active');
 
       if (!this.currentStudent.solvedFinalPuzzle) {
+        const errors = this.currentStudent.finalPuzzleErrors || 0;
+        const penalty = errors * 50;
+        const basePoints = Math.max(200, 500 - penalty);
+        const elapsedSeconds = Math.max(0, Math.floor((Date.now() - (this.finalPuzzleStartTime || Date.now())) / 1000));
+        const timeBonus = Math.max(0, 100 - elapsedSeconds);
+        const totalEarned = basePoints + timeBonus;
+
         this.currentStudent.solvedFinalPuzzle = true;
-        this.currentStudent.score += 500;
+        this.currentStudent.score += totalEarned;
+
+        domeContainer.innerHTML = `
+          <div style="font-size: 3rem; margin-bottom: 0.5rem;">🎉🔓</div>
+          <h2 style="font-family: var(--font-heading); color: var(--univc-lime-bright); font-size: 2.2rem; margin-bottom: 0.5rem;">
+            PORTA DA CÚPULA DESTRAVADA!
+          </h2>
+          <p style="font-size: 1.1rem; max-width: 600px; margin: 0 auto 1.5rem auto; line-height: 1.6;">
+            Parabéns, Protagonista <strong>${this.currentStudent.name}</strong>! Você decodificou a fala icônica de Truman: 
+            <br><em style="color: var(--univc-lime-bright); font-size: 1.2rem; display: block; margin-top: 0.5rem;">"Caso eu não os veja: Bom dia, Boa tarde e Boa noite!"</em>
+          </p>
+          
+          <div class="score-breakdown-card" style="max-width: 500px; margin: 0 auto; text-align: left;">
+            <div style="font-weight: 800; font-family: var(--font-heading); color: var(--univc-lime-bright); margin-bottom: 0.5rem; text-transform: uppercase; font-size: 0.85rem;">
+              <i class="fa-solid fa-trophy"></i> Resumo da Pontuação do Enigma Final
+            </div>
+            <div class="score-breakdown-row">
+              <span class="score-breakdown-label"><i class="fa-solid fa-star"></i> Pontos Base (${errors} erro(s)):</span>
+              <span class="score-breakdown-val">+${basePoints} PTS</span>
+            </div>
+            <div class="score-breakdown-row">
+              <span class="score-breakdown-label"><i class="fa-solid fa-stopwatch"></i> Bônus Vel. Montagem (${elapsedSeconds}s):</span>
+              <span class="score-breakdown-val">+${timeBonus} PTS</span>
+            </div>
+            <div class="score-total-box">
+              <span style="font-weight: 800; font-family: var(--font-heading); text-transform: uppercase; color: white;">Total do Enigma:</span>
+              <span class="score-total-highlight">+${totalEarned} PTS</span>
+            </div>
+          </div>
+        `;
+
         this.saveStudent();
         this.updateHeaderBadges();
         this.renderLeaderboard();
       }
     } else {
       sounds.playError();
-      alert(`Frase incorreta ou incompleta!\nSua montagem: "${userSentence || 'Vazia'}"\nDica: Reúna os 10 fragmentos das 10 estações na ordem das estações 1 a 10.`);
+      this.currentStudent.finalPuzzleErrors = (this.currentStudent.finalPuzzleErrors || 0) + 1;
+      this.saveStudent();
+
+      alert(`Frase incorreta ou incompleta! (Tentativa #${this.currentStudent.finalPuzzleErrors})\nSua montagem: "${userSentence || 'Vazia'}"\n\nPenalidade: -50 pts no valor base do enigma final.\nDica: Reúna os 10 fragmentos na ordem das estações 1 a 10.`);
     }
   }
 
