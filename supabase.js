@@ -132,22 +132,29 @@ export async function deleteTeamFromSupabase(id) {
  * Limpa todos os registros de teste no Supabase
  */
 export async function clearAllTeamsFromSupabase() {
-  if (!supabase) return null;
+  if (!supabase) return false;
 
   try {
+    // Buscar todos os IDs existentes
+    const { data: currentRows } = await supabase.from('teams').select('id');
+    if (!currentRows || currentRows.length === 0) return true;
+
+    const ids = currentRows.map(r => r.id);
     const { data, error } = await supabase
       .from('teams')
       .delete()
-      .neq('id', '000000'); // Deleta todas as linhas
+      .in('id', ids);
 
     if (error) {
       console.error("Erro ao zerar tabela no Supabase:", error);
-    } else {
-      console.log("🧹 Tabela zerada no Supabase para o evento oficial!");
+      return false;
     }
-    return data;
+
+    console.log("🧹 Tentativa de limpeza executada no Supabase.");
+    return true;
   } catch (e) {
     console.error("Erro de reset Supabase:", e);
+    return false;
   }
 }
 

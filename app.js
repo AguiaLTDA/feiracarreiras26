@@ -296,16 +296,43 @@ class App {
 
     // Admin Clear DB (Pré-Evento)
     document.getElementById('btn-admin-clear-db')?.addEventListener('click', async () => {
-      if (confirm('ATENÇÃO ORGANIZAÇÃO: Deseja zerar completamente a base de dados do evento? Isso apagar todos os testes antes da abertura dos portões.')) {
-        if (confirm('CONFIRMAÇÃO FINAL: Apagar todos os dados do banco?')) {
+      if (confirm('ATENÇÃO ORGANIZAÇÃO: Deseja zerar completamente a base de dados do evento? Isso apagará todos os cadastros de teste do banco e deste navegador.')) {
+        if (confirm('CONFIRMAÇÃO FINAL: Apagar todos os dados de teste?')) {
           sounds.playSuccess();
           this.teams = [];
-          this.saveTeams();
+          localStorage.removeItem('univc_all_teams');
+          localStorage.removeItem('univc_current_student');
+          this.currentStudent = {
+            id: 'student-user-' + Date.now(),
+            registrationType: 'individual',
+            name: '',
+            groupName: '',
+            leaderName: '',
+            groupSize: 1,
+            whatsapp: '',
+            school: '',
+            preferredCourse: '',
+            avatar: '🎓',
+            completedStations: [],
+            unlockedFragments: [],
+            solvedFinalPuzzle: false,
+            score: 0,
+            timeSpent: '0m',
+            lastUpdate: new Date().toLocaleTimeString()
+          };
+
           await clearAllTeamsFromSupabase();
-          this.renderLeaderboard();
-          this.renderTelaoLeaderboard();
-          this.renderAdminDashboard();
-          alert('Base de dados zerada com sucesso para a abertura oficial!');
+
+          const remaining = await fetchTeamsFromSupabase();
+          if (remaining && remaining.length > 0) {
+            this.teams = [];
+            alert(`ATENÇÃO ORGANIZAÇÃO:\n\nOs dados do seu navegador foram zerados, porém o banco no Supabase ainda possui ${remaining.length} registros que exigem a execução da política de DELETE ou o comando SQL no SQL Editor:\n\nTRUNCATE TABLE public.teams;\n\n(Consulte a resposta abaixo para executar em 5 segundos no Supabase).`);
+          } else {
+            alert('Base de dados zerada com sucesso tanto localmente quanto no Supabase!');
+          }
+
+          this.render();
+          if (this.isAdminAuthenticated) this.renderAdminDashboard();
         }
       }
     });
