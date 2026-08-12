@@ -1,10 +1,10 @@
 -- ==============================================================================
--- SCRIPT DE BANCO DE DADOS SUPABASE — FEIRA DE CARREIRAS UNIVC 2026
+-- SCRIPT DE BANCO DE DADOS SUPABASE — FEIRA DE CARREIRAS UNIVC 2026 (OFICIAL)
 -- Tema: Seahaven UNIVC — O Último Episódio
 -- ==============================================================================
 -- Instruções: Execute este script no SQL Editor do seu Dashboard Supabase (https://supabase.com)
 
--- 1. Criar a tabela de alunos e equipes visitantes
+-- 1. Criar a tabela de alunos visitantes
 CREATE TABLE IF NOT EXISTS public.teams (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -37,8 +37,9 @@ ALTER TABLE public.teams ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Permitir leitura pública do ranking" ON public.teams;
 DROP POLICY IF EXISTS "Permitir inserção pública de equipes" ON public.teams;
 DROP POLICY IF EXISTS "Permitir atualização pública de equipes" ON public.teams;
+DROP POLICY IF EXISTS "Permitir exclusão pública de equipes" ON public.teams;
 
--- 5. Criar Políticas de Acesso Público (Leitura, Inserção e Atualização)
+-- 5. Criar Políticas de Acesso Público (Leitura, Inserção, Atualização e Exclusão)
 CREATE POLICY "Permitir leitura pública do ranking" 
 ON public.teams FOR SELECT 
 USING (true);
@@ -49,6 +50,10 @@ WITH CHECK (true);
 
 CREATE POLICY "Permitir atualização pública de equipes" 
 ON public.teams FOR UPDATE 
+USING (true);
+
+CREATE POLICY "Permitir exclusão pública de equipes" 
+ON public.teams FOR DELETE 
 USING (true);
 
 -- 6. Função e Trigger para atualizar automaticamente o campo 'last_update'
@@ -77,3 +82,8 @@ BEGIN
         ALTER PUBLICATION supabase_realtime ADD TABLE public.teams;
     END IF;
 END $$;
+
+-- ==============================================================================
+-- COMANDO OPCIONAL PARA ZERAR TODOS OS REGISTROS DE TESTE ANTES DO EVENTO:
+-- TRUNCATE TABLE public.teams;
+-- ==============================================================================

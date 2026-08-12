@@ -1,8 +1,10 @@
-// Main Application Controller - Seahaven UNIVC Feira de Carreiras 2026 (Com Supabase Realtime)
+// Main Application Controller - Seahaven UNIVC Feira de Carreiras 2026 (Com Supabase Realtime & Painel Admin)
 
 import { EVENT_INFO, STATIONS, INITIAL_TEAMS } from './data.js';
 import { sounds } from './audio.js';
-import { syncTeamToSupabase, fetchTeamsFromSupabase, subscribeToRealtimeLeaderboard } from './supabase.js';
+import { syncTeamToSupabase, fetchTeamsFromSupabase, deleteTeamFromSupabase, clearAllTeamsFromSupabase, subscribeToRealtimeLeaderboard } from './supabase.js';
+
+const ADMIN_PASSWORD = 'admin2026';
 
 class App {
   constructor() {
@@ -13,6 +15,8 @@ class App {
     this.activeAreaFilter = 'ALL';
     this.activeSchoolFilter = 'ALL';
     this.searchQuery = '';
+    this.adminSearchQuery = '';
+    this.isAdminAuthenticated = false;
     
     this.init();
   }
@@ -24,11 +28,12 @@ class App {
 
     // Tenta carregar dados em nuvem do Supabase
     const cloudTeams = await fetchTeamsFromSupabase();
-    if (cloudTeams && cloudTeams.length > 0) {
+    if (cloudTeams) {
       this.teams = cloudTeams;
       this.saveTeams();
       this.renderLeaderboard();
       this.renderTelaoLeaderboard();
+      if (this.isAdminAuthenticated) this.renderAdminDashboard();
     }
 
     // Ativa escuta em tempo real do Supabase
@@ -39,6 +44,7 @@ class App {
       this.renderLeaderboard();
       this.renderTelaoLeaderboard();
       this.updateHeaderBadges();
+      if (this.isAdminAuthenticated) this.renderAdminDashboard();
     });
   }
 
@@ -49,10 +55,10 @@ class App {
     } else {
       this.currentStudent = {
         id: 'student-user-' + Date.now(),
-        name: 'Aluno Visitante',
-        whatsapp: '(27) 99999-9999',
-        school: 'Pedro Paulo Grobério (Jaguaré)',
-        preferredCourse: 'Análise e Dev. de Sistemas (ADS)',
+        name: '',
+        whatsapp: '',
+        school: '',
+        preferredCourse: '',
         avatar: '🎓',
         completedStations: [],
         unlockedFragments: [],
@@ -70,9 +76,14 @@ class App {
       this.teams = [...INITIAL_TEAMS];
       this.saveTeams();
     }
+
+    if (sessionStorage.getItem('univc_admin_authed') === 'true') {
+      this.isAdminAuthenticated = true;
+    }
   }
 
   saveStudent() {
+    if (!this.currentStudent.name) return;
     this.currentStudent.lastUpdate = new Date().toLocaleTimeString();
     localStorage.setItem('univc_current_student', JSON.stringify(this.currentStudent));
     this.updateUserInTeams();
@@ -86,6 +97,7 @@ class App {
   }
 
   updateUserInTeams() {
+    if (!this.currentStudent.name) return;
     const idx = this.teams.findIndex(t => t.id === this.currentStudent.id);
     if (idx >= 0) {
       this.teams[idx] = { ...this.currentStudent };
@@ -171,18 +183,64 @@ class App {
       this.renderLeaderboard();
     });
 
-    // Live Simulator Button
-    document.getElementById('btn-simulate-points')?.addEventListener('click', () => {
-      sounds.playSuccess();
-      this.simulateLiveUpdates();
+    // Admin Auth Form
+    document.getElementById('form-admin-login')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const pwd = document.getElementById('input-admin-password').value;
+      if (pwd === ADMIN_PASSWORD) {
+        sounds.playSuccess();
+        this.isAdminAuthenticated = true;
+        sessionStorage.setItem('univc_admin_authed', 'true');
+        this.renderAdminView();
+      } else {
+        sounds.playError();
+        alert('Senha de Administrador incorreta!');
+      }
     });
 
-    // Reset Data
-    document.getElementById('btn-reset-data')?.addEventListener('click', () => {
-      if (confirm('Deseja reiniciar os dados do protótipo para o estado inicial?')) {
-        localStorage.clear();
-        location.reload();
+    // Admin Logout
+    document.getElementById('btn-admin-logout')?.addEventListener('click', () => {
+      sounds.playClick();
+      this.isAdminAuthenticated = false;
+      sessionStorage.removeItem('univc_admin_authed');
+      this.renderAdminView();
+    });
+
+    // Admin Search
+    document.getElementById('search-admin')?.addEventListener('input', (e) => {
+      this.adminSearchQuery = e.target.value.toLowerCase();
+      this.renderAdminDashboard();
+    });
+
+    // Admin Export CSV
+    document.getElementById('btn-admin-export-csv')?.addEventListener('click', () => {
+      sounds.playSuccess();
+      this.exportAdminCSV();
+    });
+
+    // Admin Clear DB (Pré-Evento)
+    document.getElementById('btn-admin-clear-db')?.addEventListener('click', async () => {
+      if (confirm('ATENÇÃO ORGANIZAÇÃO: Deseja zerar completamente a base de dados do evento? Isso apagar todos os testes antes da abertura dos portões.')) {
+        if (confirm('CONFIRMAÇÃO FINAL: Apagar todos os dados do banco?')) {
+          sounds.playSuccess();
+          this.teams = [];
+          this.saveTeams();
+          await clearAllTeamsFromSupabase();
+          this.renderLeaderboard();
+          this.renderTelaoLeaderboard();
+          this.renderAdminDashboard();
+          alert('Base de dados zerada com sucesso para a abertura oficial!');
+        }
       }
+    });
+
+    // Admin Edit Modal Controls
+    document.getElementById('btn-close-admin-edit')?.addEventListener('click', () => this.closeAdminEditModal());
+    document.getElementById('btn-cancel-admin-edit')?.addEventListener('click', () => this.closeAdminEditModal());
+    
+    document.getElementById('form-admin-edit-student')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.handleAdminSaveEdit();
     });
   }
 
@@ -192,6 +250,10 @@ class App {
 
     document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
     document.getElementById(`view-${tabId}`)?.classList.add('active');
+
+    if (tabId === 'admin') {
+      this.renderAdminView();
+    }
   }
 
   toggleTelaoMode(enable) {
@@ -229,7 +291,7 @@ class App {
   }
 
   renderBadge() {
-    if (!this.currentStudent) return;
+    if (!this.currentStudent || !this.currentStudent.name) return;
     document.getElementById('badge-student-name').textContent = this.currentStudent.name || 'Nome do Aluno';
     document.getElementById('badge-preferred-course').innerHTML = `<i class="fa-solid fa-graduation-cap"></i> Curso: ${this.currentStudent.preferredCourse || 'Não informado'}`;
     document.getElementById('badge-school-name').innerHTML = `<i class="fa-solid fa-school"></i> Escola: ${this.currentStudent.school || '--'}`;
@@ -246,9 +308,9 @@ class App {
   }
 
   updateHeaderBadges() {
-    const done = this.currentStudent.completedStations.length;
+    const done = this.currentStudent.completedStations ? this.currentStudent.completedStations.length : 0;
     document.getElementById('badge-stations-done').textContent = `${done}/10`;
-    document.getElementById('badge-fragments-count').textContent = `${this.currentStudent.unlockedFragments.length}/10`;
+    document.getElementById('badge-fragments-count').textContent = `${this.currentStudent.unlockedFragments ? this.currentStudent.unlockedFragments.length : 0}/10`;
 
     // Calculate user rank
     const sorted = [...this.teams].sort((a, b) => b.score - a.score);
@@ -266,8 +328,10 @@ class App {
       return s.area.includes(this.activeAreaFilter);
     });
 
+    const completedList = this.currentStudent.completedStations || [];
+
     filtered.forEach(station => {
-      const isCompleted = this.currentStudent.completedStations.includes(station.id);
+      const isCompleted = completedList.includes(station.id);
       const card = document.createElement('div');
       card.className = `station-card ${isCompleted ? 'completed' : ''}`;
       
@@ -323,7 +387,8 @@ class App {
     const feedbackBox = document.getElementById('modal-feedback-box');
     feedbackBox.style.display = 'none';
 
-    const isCompleted = this.currentStudent.completedStations.includes(stationId);
+    const completedList = this.currentStudent.completedStations || [];
+    const isCompleted = completedList.includes(stationId);
 
     station.options.forEach(opt => {
       const btn = document.createElement('button');
@@ -368,6 +433,9 @@ class App {
         <strong style="color: var(--univc-lime-bright); font-size: 1.1rem;"><i class="fa-solid fa-circle-check"></i> Resposta Correta! +100 Pontos!</strong>
         <p style="margin-top: 0.35rem; font-size: 0.95rem;">Você desvendou a falha no local <strong>${station.location}</strong> e desbloqueou o fragmento: <span style="color: var(--univc-lime-bright); font-weight: 900; font-size: 1.2rem;">"${station.fragment}"</span>!</p>
       `;
+
+      if (!this.currentStudent.completedStations) this.currentStudent.completedStations = [];
+      if (!this.currentStudent.unlockedFragments) this.currentStudent.unlockedFragments = [];
 
       // Update student progress
       if (!this.currentStudent.completedStations.includes(station.id)) {
@@ -495,8 +563,8 @@ class App {
 
     if (this.searchQuery) {
       sorted = sorted.filter(t => 
-        t.name.toLowerCase().includes(this.searchQuery) || 
-        t.school.toLowerCase().includes(this.searchQuery) ||
+        (t.name && t.name.toLowerCase().includes(this.searchQuery)) || 
+        (t.school && t.school.toLowerCase().includes(this.searchQuery)) ||
         (t.preferredCourse && t.preferredCourse.toLowerCase().includes(this.searchQuery))
       );
     }
@@ -517,11 +585,11 @@ class App {
       card.innerHTML = `
         <div class="podium-badge">${posInfo.badgeIcon}</div>
         <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">${team.avatar || '🎓'}</div>
-        <div class="podium-team-name">${team.name}</div>
+        <div class="podium-team-name">${team.name || 'Aluno'}</div>
         <div style="font-size: 0.8rem; color: var(--univc-emerald-mid); font-weight: 800; margin-bottom: 0.25rem;">
           <i class="fa-solid fa-graduation-cap"></i> ${team.preferredCourse || 'Geral'}
         </div>
-        <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; margin-bottom: 0.5rem;">${team.school}</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; margin-bottom: 0.5rem;">${team.school || '--'}</div>
         <div class="podium-score">${team.score} PTS</div>
         <small style="color: var(--univc-emerald-mid); font-weight: 800;">${team.completedStations?.length || 0}/10 Estações</small>
       `;
@@ -541,12 +609,12 @@ class App {
           <div style="display: flex; align-items: center; gap: 0.6rem;">
             <span style="font-size: 1.4rem;">${team.avatar || '🎓'}</span>
             <div>
-              <strong>${team.name}</strong> ${isUser ? '<span style="background: var(--univc-lime); color: var(--univc-emerald-dark); font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 900; margin-left: 0.4rem;">VOCÊ</span>' : ''}
+              <strong>${team.name || 'Aluno'}</strong> ${isUser ? '<span style="background: var(--univc-lime); color: var(--univc-emerald-dark); font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 900; margin-left: 0.4rem;">VOCÊ</span>' : ''}
               <div style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-graduation-cap"></i> ${team.preferredCourse || 'Não informado'}</div>
             </div>
           </div>
         </td>
-        <td>${team.school}</td>
+        <td>${team.school || '--'}</td>
         <td><strong style="color: var(--univc-emerald-dark);">${team.completedStations?.length || 0}/10</strong></td>
         <td>${team.unlockedFragments?.length || 0}</td>
         <td>${team.solvedFinalPuzzle ? '<span style="color: var(--univc-neon-green); font-weight: 800;"><i class="fa-solid fa-circle-check"></i> Desbloqueada (+500)</span>' : '<span style="color: #94a3b8;">Pendente</span>'}</td>
@@ -574,9 +642,9 @@ class App {
       card.innerHTML = `
         <div style="font-size: 0.9rem; font-weight: 900; color: var(--univc-lime-bright); letter-spacing: 0.1em; margin-bottom: 0.5rem;">${ranks[index]}</div>
         <div style="font-size: 3.5rem; margin-bottom: 0.5rem;">${team.avatar || '🎓'}</div>
-        <h3 style="font-family: var(--font-heading); font-size: 1.8rem; color: white;">${team.name}</h3>
+        <h3 style="font-family: var(--font-heading); font-size: 1.8rem; color: white;">${team.name || 'Aluno'}</h3>
         <p style="color: var(--univc-lime-bright); font-size: 1.05rem; font-weight: 700;"><i class="fa-solid fa-graduation-cap"></i> ${team.preferredCourse || 'Geral'}</p>
-        <p style="color: rgba(255,255,255,0.8); font-size: 1rem; margin-bottom: 1rem;">${team.school}</p>
+        <p style="color: rgba(255,255,255,0.8); font-size: 1rem; margin-bottom: 1rem;">${team.school || '--'}</p>
         <div style="font-family: var(--font-heading); font-size: 2.5rem; font-weight: 900; color: var(--univc-lime-bright);">${team.score} PTS</div>
       `;
       podiumContainer.appendChild(card);
@@ -584,15 +652,15 @@ class App {
 
     // Telão Table
     tableBody.innerHTML = '';
-    sorted.slice(3, 10).forEach((team, index) => {
+    sorted.slice(3, 15).forEach((team, index) => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td style="font-weight: 900; color: var(--univc-lime-bright);">${index + 4}º</td>
         <td>
-          <strong>${team.avatar || '🎓'} ${team.name}</strong>
+          <strong>${team.avatar || '🎓'} ${team.name || 'Aluno'}</strong>
           <div style="font-size: 0.85rem; color: var(--univc-lime-bright); opacity: 0.9;"><i class="fa-solid fa-graduation-cap"></i> ${team.preferredCourse || ''}</div>
         </td>
-        <td style="opacity: 0.85;">${team.school}</td>
+        <td style="opacity: 0.85;">${team.school || '--'}</td>
         <td style="text-align: center; font-weight: bold; color: var(--univc-lime);">${team.completedStations?.length || 0} / 10</td>
         <td style="text-align: right; font-weight: 900; font-family: var(--font-heading); font-size: 1.4rem; color: var(--univc-lime-bright);">${team.score} PTS</td>
       `;
@@ -600,19 +668,187 @@ class App {
     });
   }
 
-  simulateLiveUpdates() {
-    this.teams.forEach(t => {
-      if (t.id !== this.currentStudent.id) {
-        if (Math.random() > 0.4 && t.completedStations.length < 10) {
-          t.completedStations.push(t.completedStations.length + 1);
-          t.score += 100;
-        }
-      }
+  /* Admin Section Logic */
+  renderAdminView() {
+    const authBox = document.getElementById('admin-auth-box');
+    const dashBox = document.getElementById('admin-dashboard-box');
+
+    if (this.isAdminAuthenticated) {
+      authBox.style.display = 'none';
+      dashBox.style.display = 'block';
+      this.renderAdminDashboard();
+    } else {
+      authBox.style.display = 'block';
+      dashBox.style.display = 'none';
+    }
+  }
+
+  renderAdminDashboard() {
+    const tableBody = document.getElementById('table-admin-body');
+    if (!tableBody) return;
+
+    // Stats
+    const totalStudents = this.teams.length;
+    const totalScoreSum = this.teams.reduce((acc, t) => acc + (t.score || 0), 0);
+    const avgScore = totalStudents > 0 ? Math.round(totalScoreSum / totalStudents) : 0;
+    const uniqueSchools = new Set(this.teams.map(t => t.school).filter(Boolean)).size;
+    const completedPasswords = this.teams.filter(t => t.solvedFinalPuzzle).length;
+
+    document.getElementById('stat-total-students').textContent = totalStudents;
+    document.getElementById('stat-avg-score').textContent = `${avgScore} PTS`;
+    document.getElementById('stat-total-schools').textContent = uniqueSchools;
+    document.getElementById('stat-completed-passwords').textContent = completedPasswords;
+
+    // Filter & Sort
+    let sorted = [...this.teams].sort((a, b) => b.score - a.score);
+
+    if (this.adminSearchQuery) {
+      sorted = sorted.filter(t => 
+        (t.name && t.name.toLowerCase().includes(this.adminSearchQuery)) ||
+        (t.whatsapp && t.whatsapp.toLowerCase().includes(this.adminSearchQuery)) ||
+        (t.school && t.school.toLowerCase().includes(this.adminSearchQuery)) ||
+        (t.preferredCourse && t.preferredCourse.toLowerCase().includes(this.adminSearchQuery))
+      );
+    }
+
+    tableBody.innerHTML = '';
+
+    if (sorted.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+            Nenhum aluno cadastrado no momento. Os cadastros realizados aparecerão aqui em tempo real.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    sorted.forEach((student, index) => {
+      const tr = document.createElement('tr');
+      const cleanDigits = (student.whatsapp || '').replace(/\D/g, '');
+      const waLink = cleanDigits ? `https://wa.me/55${cleanDigits}` : '#';
+
+      tr.innerHTML = `
+        <td><strong class="rank-number">${index + 1}º</strong></td>
+        <td><strong>${student.name || 'Aluno'}</strong></td>
+        <td>
+          ${cleanDigits ? `<a href="${waLink}" target="_blank" style="color: #16a34a; font-weight: bold; text-decoration: none;"><i class="fa-brands fa-whatsapp"></i> ${student.whatsapp}</a>` : '<span style="color: #94a3b8;">--</span>'}
+        </td>
+        <td>${student.school || '--'}</td>
+        <td><strong style="color: var(--univc-emerald-dark);">${student.preferredCourse || 'Não informado'}</strong></td>
+        <td>${student.completedStations?.length || 0}/10</td>
+        <td><strong style="color: var(--univc-emerald-mid); font-size: 1.05rem;">${student.score} PTS</strong></td>
+        <td style="text-align: center;">
+          <div style="display: flex; gap: 0.5rem; justify-content: center;">
+            <button class="btn-secondary btn-edit-student" data-id="${student.id}" style="padding: 0.4rem 0.7rem; font-size: 0.8rem;" title="Editar Aluno">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button class="btn-secondary btn-delete-student" data-id="${student.id}" style="padding: 0.4rem 0.7rem; font-size: 0.8rem; color: #ef4444;" title="Excluir Registro de Teste">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </td>
+      `;
+
+      tr.querySelector('.btn-edit-student')?.addEventListener('click', () => {
+        this.openAdminEditModal(student);
+      });
+
+      tr.querySelector('.btn-delete-student')?.addEventListener('click', () => {
+        this.handleAdminDeleteStudent(student);
+      });
+
+      tableBody.appendChild(tr);
     });
-    this.saveTeams();
-    this.renderLeaderboard();
-    this.renderTelaoLeaderboard();
-    this.updateHeaderBadges();
+  }
+
+  openAdminEditModal(student) {
+    document.getElementById('edit-student-id').value = student.id;
+    document.getElementById('edit-student-name').value = student.name || '';
+    document.getElementById('edit-student-whatsapp').value = student.whatsapp || '';
+    document.getElementById('edit-student-school').value = student.school || '';
+    document.getElementById('edit-student-course').value = student.preferredCourse || '';
+    document.getElementById('edit-student-score').value = student.score || 0;
+
+    document.getElementById('modal-admin-edit').classList.add('active');
+  }
+
+  closeAdminEditModal() {
+    document.getElementById('modal-admin-edit').classList.remove('active');
+  }
+
+  handleAdminSaveEdit() {
+    const id = document.getElementById('edit-student-id').value;
+    const idx = this.teams.findIndex(t => t.id === id);
+
+    if (idx >= 0) {
+      this.teams[idx].name = document.getElementById('edit-student-name').value.trim();
+      this.teams[idx].whatsapp = document.getElementById('edit-student-whatsapp').value.trim();
+      this.teams[idx].school = document.getElementById('edit-student-school').value.trim();
+      this.teams[idx].preferredCourse = document.getElementById('edit-student-course').value.trim();
+      this.teams[idx].score = parseInt(document.getElementById('edit-student-score').value, 10) || 0;
+
+      this.saveTeams();
+      syncTeamToSupabase(this.teams[idx]);
+
+      if (this.currentStudent.id === id) {
+        this.currentStudent = { ...this.teams[idx] };
+        localStorage.setItem('univc_current_student', JSON.stringify(this.currentStudent));
+        this.renderBadge();
+      }
+
+      this.closeAdminEditModal();
+      this.renderLeaderboard();
+      this.renderTelaoLeaderboard();
+      this.renderAdminDashboard();
+      sounds.playSuccess();
+    }
+  }
+
+  async handleAdminDeleteStudent(student) {
+    if (confirm(`Deseja excluir permanentemente o registro de "${student.name}"?`)) {
+      sounds.playClick();
+      this.teams = this.teams.filter(t => t.id !== student.id);
+      this.saveTeams();
+      await deleteTeamFromSupabase(student.id);
+
+      this.renderLeaderboard();
+      this.renderTelaoLeaderboard();
+      this.renderAdminDashboard();
+    }
+  }
+
+  exportAdminCSV() {
+    if (this.teams.length === 0) {
+      alert('Não há dados de alunos para exportar.');
+      return;
+    }
+
+    const headers = ["Posicao", "Nome_Aluno", "WhatsApp", "Escola_Origem", "Curso_Pretendido", "Estacoes_Concluidas", "Senha_Final", "Pontuacao", "Ultima_Atualizacao"];
+    const sorted = [...this.teams].sort((a, b) => b.score - a.score);
+
+    const rows = sorted.map((t, idx) => [
+      idx + 1,
+      `"${(t.name || '').replace(/"/g, '""')}"`,
+      `"${(t.whatsapp || '').replace(/"/g, '""')}"`,
+      `"${(t.school || '').replace(/"/g, '""')}"`,
+      `"${(t.preferredCourse || '').replace(/"/g, '""')}"`,
+      t.completedStations ? t.completedStations.length : 0,
+      t.solvedFinalPuzzle ? "SIM" : "NAO",
+      t.score || 0,
+      `"${t.lastUpdate || ''}"`
+    ]);
+
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `relatorio_alunos_univc_2026_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   render() {

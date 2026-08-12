@@ -98,6 +98,52 @@ export async function fetchTeamsFromSupabase() {
 }
 
 /**
+ * Exclui um aluno do Supabase por ID
+ */
+export async function deleteTeamFromSupabase(id) {
+  if (!supabase) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from('teams')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error("Erro ao excluir aluno do Supabase:", error);
+    } else {
+      console.log("🗑️ Aluno excluído do Supabase:", id);
+    }
+    return data;
+  } catch (e) {
+    console.error("Erro de exclusão Supabase:", e);
+  }
+}
+
+/**
+ * Limpa todos os registros de teste no Supabase
+ */
+export async function clearAllTeamsFromSupabase() {
+  if (!supabase) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from('teams')
+      .delete()
+      .neq('id', '000000'); // Deleta todas as linhas
+
+    if (error) {
+      console.error("Erro ao zerar tabela no Supabase:", error);
+    } else {
+      console.log("🧹 Tabela zerada no Supabase para o evento oficial!");
+    }
+    return data;
+  } catch (e) {
+    console.error("Erro de reset Supabase:", e);
+  }
+}
+
+/**
  * Escuta atualizações em tempo real (Postgres Changes via WebSockets)
  */
 export function subscribeToRealtimeLeaderboard(onUpdateCallback) {
