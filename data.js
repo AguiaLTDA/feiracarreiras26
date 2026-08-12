@@ -63,16 +63,17 @@ export const STATIONS = [
     icon: "brain-circuit",
     title: "Clínica-Escola: Mente & Corpo",
     fragment: "NÃO",
-    narrative: "Na Clínica-Escola, investigamos as marcas físicas e emocionais de Truman. Christof implantou o medo de água e o desgaste físico de 30 anos de postura de escritório. O corpo e a mente guardam tudo.",
-    challengeTitle: "Desafio da Dor e Escuta Terapêutica (Clínica-Escola)",
-    question: "Como a equipe multidisciplinar da Clínica-Escola identifica a diferença entre uma manipulação psicológica/física encenada e um atendimento profissional verdadeiro?",
+    narrative: "No filme O Show de Truman, Truman Burbank descobre que toda a sua vida foi construída e observada por outras pessoas. Desde a infância, ele também foi levado a acreditar que o mar era extremamente perigoso, após vivenciar a morte de seu pai em um acidente no mar.",
+    challengeTitle: "Desafio de Psicologia",
+    question: "Considerando os efeitos que experiências marcantes podem produzir sobre uma pessoa, é possível afirmar que:",
     options: [
-      { letter: "A", text: "A escuta e avaliação legítimas promovem autonomia e reabilitação real, enquanto a manipulação induz bloqueios e dor continuada.", correct: true },
-      { letter: "B", text: "Ambos os processos visam condicionar as escolhas do sujeito através do medo.", correct: false },
-      { letter: "C", text: "A avaliação profissional ignora queixas reais do paciente.", correct: false },
-      { letter: "D", text: "A marcha com dor compensatória é sempre uma encenação sem impacto mecânico.", correct: false }
+      { letter: "A", text: "Experiências traumáticas podem influenciar a maneira como uma pessoa percebe determinadas situações, podendo provocar medo e comportamentos de evitação.", correct: true },
+      { letter: "B", text: "Uma experiência traumática afeta somente as pessoas que apresentam algum transtorno psicológico antes do acontecimento.", correct: false },
+      { letter: "C", text: "Depois que uma pessoa vivencia uma experiência traumática, ela necessariamente desenvolverá um transtorno mental.", correct: false },
+      { letter: "D", text: "O trauma vivido por Truman não poderia influenciar seu comportamento, pois aconteceu durante sua infância.", correct: false },
+      { letter: "E", text: "O medo apresentado por Truman demonstra que todas as pessoas que vivenciam situações semelhantes desenvolverão exatamente a mesma reação.", correct: false }
     ],
-    hint: "Autonomia do paciente vs Manipulação induzida."
+    hint: "Traumas influenciam a percepção e geram comportamentos de evitação."
   },
   {
     id: 4,
@@ -82,18 +83,18 @@ export const STATIONS = [
     area: "SAÚDE",
     areaBadge: "ESTAÇÃO SAÚDE",
     icon: "stethoscope",
-    title: "Semiologia: Sinais Vitais & Placebo",
+    title: "Semiologia: Triagem de Sinais Vitais",
     fragment: "OS",
-    narrative: "No Laboratório de Semiologia, os alunos analisam que atores fingem amor e amizade, mas ninguém consegue falsificar sinais vitais ou a diferença entre princípio ativo e placebo.",
-    challengeTitle: "Desafio de Semiologia e Farmacologia",
-    question: "Na triagem de Semiologia, a ficha de um figurante apresenta: Pressão 120x80 mmHg, Saturação 99% e Frequência Cardíaca de 0 bpm em repouso. O que essa medição revela?",
+    narrative: "Na triagem do Laboratório de Semiologia, a equipe de saúde avalia a resposta fisiológica real dos pacientes diante de situações de emergência.",
+    challengeTitle: "Desafio de Triagem Clínica (Semiologia)",
+    question: "Um paciente de 68 anos chega à unidade referindo falta de ar e fraqueza. Sinais vitais: PA: 88 × 54 mmHg | FC: 128 bpm | FR: 30 irpm | SpO₂: 87% | T: 37,2 °C. Qual alteração merece maior atenção imediata?",
     options: [
-      { letter: "A", text: "É uma ficha falsificada; é fisiologicamente impossível ter Frequência Cardíaca 0 bpm em um indivíduo vivo em repouso.", correct: true },
-      { letter: "B", text: "A pressão arterial indica uma parada cardiorrespiratória iminente.", correct: false },
-      { letter: "C", text: "O paciente ingeriu placebo e parou de respirar.", correct: false },
-      { letter: "D", text: "Todos os parâmetros estão em perfeito estado de repouso.", correct: false }
+      { letter: "A", text: "Temperatura corporal (T: 37,2 °C).", correct: false },
+      { letter: "B", text: "Frequência cardíaca isolada (FC: 128 bpm).", correct: false },
+      { letter: "C", text: "Saturação de oxigênio (SpO₂: 87%) e padrão respiratório (FR: 30 irpm).", correct: true },
+      { letter: "D", text: "Nenhuma das alterações apresentadas exige atenção imediata.", correct: false }
     ],
-    hint: "Qual sinal vital indica os batimentos do coração?"
+    hint: "Observe a saturação de oxigênio (SpO₂ de 87% indica hipoxemia grave)."
   },
   {
     id: 5,
@@ -105,16 +106,16 @@ export const STATIONS = [
     icon: "x-ray",
     title: "Radiologia: O Raio-X da Verdade",
     fragment: "VEJA",
-    narrative: "No Laboratório de Radiologia, a tecnologia atravessa a superfície do cenário de Seahaven e revela o que as câmeras de Christof tentavam esconder dentro do corpo humano.",
-    challengeTitle: "Desafio de Diagnóstico por Imagem (Radiologia)",
-    question: "Ao examinar uma imagem radiográfica de tórax de um ator do elenco, detecta-se um objeto retangular metálico opaco na região esofágica. Qual a interpretação radiológica?",
+    narrative: "No Laboratório de Radiologia, a tecnologia atravessa a superfície e revela com precisão a estrutura óssea em exames de urgência.",
+    challengeTitle: "Desafio de Interpretação Radiológica",
+    question: "Durante o atendimento de um personagem que sofreu uma queda, é realizada uma radiografia da perna. Na imagem, observa-se uma descontinuidade da cortical óssea da tíbia, associada a uma linha radiolúcida atravessando o osso. Qual é a interpretação radiológica mais adequada?",
     options: [
-      { letter: "A", text: "Presença de um corpo estranho (microfone metálico engolido acidentalmente), invisível no exame visual externo.", correct: true },
-      { letter: "B", text: "Estrutura óssea normal do gradil costal humano.", correct: false },
-      { letter: "C", text: "Artefato sem qualquer densidade radiopaca.", correct: false },
-      { letter: "D", text: "Densidade de ar normal nos alvéolos pulmonares.", correct: false }
+      { letter: "A", text: "Fratura da tíbia, caracterizada pela interrupção da continuidade óssea.", correct: true },
+      { letter: "B", text: "Estrutura óssea normal, sem alterações radiográficas.", correct: false },
+      { letter: "C", text: "Artefato radiográfico sem relação com a estrutura óssea.", correct: false },
+      { letter: "D", text: "Presença de ar nos tecidos ósseos, sem alteração da cortical.", correct: false }
     ],
-    hint: "Objetos metálicos possuem alta densidade radiopaca no raio-X."
+    hint: "A linha radiolúcida com descontinuidade da cortical indica fratura."
   },
   {
     id: 6,
@@ -147,9 +148,9 @@ export const STATIONS = [
     icon: "volleyball",
     title: "Quadra: Circuito & Preparação Física",
     fragment: "BOM",
-    narrative: "Na Quadra Poliesportiva, Nenhuma descoberta liberta Truman sem o condicionamento físico para remar e vencer a tempestade. Esta é a estação da ação e da resistência cardiorrespiratória!",
+    narrative: "Na Quadra Poliesportiva, nenhuma descoberta liberta Truman sem o condicionamento físico para remar e vencer a tempestade. Esta é a estação da ação e da resistência cardiorrespiratória!",
     challengeTitle: "Desafio de Condicionamento Cardíaco (Quadra)",
-    question: "Após realizar o circuito funcional na Quadra, qual métrica fisiológica demonstra que a equipe possui um bom condicionamento e excelente recuperação pós-esforço?",
+    question: "Após realizar o circuito funcional na Quadra, qual métrica fisiológica demonstra que o aluno possui um bom condicionamento e excelente recuperação pós-esforço?",
     options: [
       { letter: "A", text: "Queda consistente e rápida da Frequência Cardíaca (FC) de volta aos níveis de repouso nos primeiros minutos de recuperação.", correct: true },
       { letter: "B", text: "Manutenção da FC máxima por mais de 5 horas consecutivas em repouso.", correct: false },
@@ -187,18 +188,18 @@ export const STATIONS = [
     area: "SAÚDE / TECNOLOGIA",
     areaBadge: "ESTAÇÃO SAÚDE",
     icon: "shield-cat",
-    title: "Clínica Veterinária: Sol de Cenário",
+    title: "Clínica Veterinária: Bem-Estar Animal",
     fragment: "BOA",
-    narrative: "Na Clínica Veterinária, avaliamos o bem-estar animal e agrícola. O cachorro de Seahaven e a lavoura do estúdio não sobrevivem de luz artificial de refletores.",
-    challengeTitle: "Desafio de Fotossíntese e Bem-Estar (Clínica Vet)",
-    question: "Por que uma plantação mantida no estúdio de Seahaven morreria após algumas semanas sob a iluminação dos refletores do programa?",
+    narrative: "Em Seahaven, tudo está sob controle. Os atores seguem o roteiro e até os animais parecem perfeitamente saudáveis. Mas será que a vida também consegue seguir um roteiro?",
+    challengeTitle: "Desafio: Qual paciente saiu do roteiro?",
+    question: "Três cães estão prontos para entrar em cena. A produção garante que todos estão bem, mas um deles apresenta sinais de que precisa de atendimento veterinário. Observe os pacientes e descubra qual deles está realmente doente:",
     options: [
-      { letter: "A", text: "Refletores comuns de estúdio não emitem a Radiação Fotossintologicamente Ativa (PAR) nem os espectros essenciais para a fotossíntese.", correct: true },
-      { letter: "B", text: "As plantas necessitam apenas de calor térmico e não utilizam luz para produzir energia.", correct: false },
-      { letter: "C", text: "O barulho dos microfones do estúdio impede a absorção de nutrientes pelas raízes.", correct: false },
-      { letter: "D", text: "O solo artificial de plástico fornece todos os nutrientes de uma lavoura real.", correct: false }
+      { letter: "A", text: "Paciente A: Está animado, alimentou-se normalmente, não apresenta febre e está com as mucosas rosadas.", correct: false },
+      { letter: "B", text: "Paciente B: Está quieto e abatido, apresenta febre, coração acelerado, mucosas pálidas e não quis se alimentar.", correct: true },
+      { letter: "C", text: "Paciente C: Está alerta, não apresenta febre, alimentou-se normalmente e está interagindo com as pessoas.", correct: false },
+      { letter: "D", text: "Todos estão saudáveis. Se não há ferimentos visíveis, não há motivo para atendimento veterinário.", correct: false }
     ],
-    hint: "Luz de estúdio não possui o espectro solar para fotossíntese."
+    hint: "Prostação, febre, taquicardia e mucosas pálidas indicam doença."
   },
   {
     id: 10,
