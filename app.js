@@ -77,6 +77,8 @@ class App {
       if (this.currentStudent.comboStreak === undefined) this.currentStudent.comboStreak = 0;
       if (!this.currentStudent.stationErrors) this.currentStudent.stationErrors = {};
       if (this.currentStudent.finalPuzzleErrors === undefined) this.currentStudent.finalPuzzleErrors = 0;
+      if (!this.currentStudent.assembledWords) this.currentStudent.assembledWords = [];
+      this.assembledWords = [...this.currentStudent.assembledWords];
     } else {
       this.currentStudent = {
         id: 'student-user-' + Date.now(),
@@ -92,6 +94,7 @@ class App {
         completedStations: [],
         unlockedFragments: [],
         solvedFinalPuzzle: false,
+        assembledWords: [],
         score: 0,
         comboStreak: 0,
         stationErrors: {},
@@ -99,6 +102,7 @@ class App {
         timeSpent: '0m',
         lastUpdate: new Date().toLocaleTimeString()
       };
+      this.assembledWords = [];
     }
 
     const savedTeams = localStorage.getItem('univc_all_teams');
@@ -458,6 +462,9 @@ class App {
         if (lockOverlay) lockOverlay.style.display = 'none';
         if (content) content.style.display = 'block';
         if (!this.finalPuzzleStartTime) this.finalPuzzleStartTime = Date.now();
+        this.renderSentenceInventory();
+        this.renderSentenceAssembly();
+        this.checkAndRenderUnlockedDome();
       }
     }
 
@@ -892,6 +899,8 @@ class App {
         chip.addEventListener('click', () => {
           sounds.playClick();
           this.assembledWords.push(st.fragment);
+          this.currentStudent.assembledWords = [...this.assembledWords];
+          this.saveStudent();
           this.renderSentenceInventory();
           this.renderSentenceAssembly();
         });
@@ -924,12 +933,52 @@ class App {
       placed.addEventListener('click', () => {
         sounds.playClick();
         this.assembledWords.splice(index, 1);
+        this.currentStudent.assembledWords = [...this.assembledWords];
+        this.saveStudent();
         this.renderSentenceInventory();
         this.renderSentenceAssembly();
       });
 
       area.appendChild(placed);
     });
+  }
+
+  checkAndRenderUnlockedDome() {
+    const domeContainer = document.getElementById('dome-door-unlocked');
+    if (!domeContainer) return;
+
+    if (this.currentStudent && this.currentStudent.solvedFinalPuzzle) {
+      domeContainer.classList.add('active');
+      const errors = this.currentStudent.finalPuzzleErrors || 0;
+      const penalty = errors * 50;
+      const basePoints = Math.max(200, 500 - penalty);
+      const earned = this.currentStudent.finalPuzzleScore || basePoints;
+
+      domeContainer.innerHTML = `
+        <div style="font-size: 3rem; margin-bottom: 0.5rem;">🎉🔓</div>
+        <h2 style="font-family: var(--font-heading); color: var(--univc-lime-bright); font-size: 2.2rem; margin-bottom: 0.5rem;">
+          PORTA DA CÚPULA DESTRAVADA!
+        </h2>
+        <p style="font-size: 1.1rem; max-width: 600px; margin: 0 auto 1.5rem auto; line-height: 1.6;">
+          Parabéns, Protagonista <strong>${this.currentStudent.name}</strong>! Você decodificou a fala icônica de Truman: 
+          <br><em style="color: var(--univc-lime-bright); font-size: 1.2rem; display: block; margin-top: 0.5rem;">"${EVENT_INFO.fullQuote}"</em>
+        </p>
+        
+        <div class="score-breakdown-card" style="max-width: 500px; margin: 0 auto; text-align: left;">
+          <div style="font-weight: 800; font-family: var(--font-heading); color: var(--univc-lime-bright); margin-bottom: 0.5rem; text-transform: uppercase; font-size: 0.85rem;">
+            <i class="fa-solid fa-trophy"></i> Desafio Concluído com Sucesso! (+${earned} PTS)
+          </div>
+          <div class="score-breakdown-row">
+            <span class="score-breakdown-label"><i class="fa-solid fa-star"></i> Status da Cúpula:</span>
+            <span class="score-breakdown-val" style="color: var(--univc-lime-bright);">DESBLOQUEADO ✔</span>
+          </div>
+          <div class="score-total-box">
+            <span style="font-weight: 800; font-family: var(--font-heading); text-transform: uppercase; color: white;">Status Final:</span>
+            <span class="score-total-highlight">PROTAGONISTA LIVRE 🚀</span>
+          </div>
+        </div>
+      `;
+    }
   }
 
   verifySentencePassword() {
@@ -940,8 +989,6 @@ class App {
 
     if (userSentence === targetSentence) {
       sounds.playFanfare();
-      const domeContainer = document.getElementById('dome-door-unlocked');
-      domeContainer.classList.add('active');
 
       if (!this.currentStudent.solvedFinalPuzzle) {
         const errors = this.currentStudent.finalPuzzleErrors || 0;
@@ -952,47 +999,22 @@ class App {
         const totalEarned = basePoints + timeBonus;
 
         this.currentStudent.solvedFinalPuzzle = true;
+        this.currentStudent.finalPuzzleScore = totalEarned;
         this.currentStudent.score += totalEarned;
-
-        domeContainer.innerHTML = `
-          <div style="font-size: 3rem; margin-bottom: 0.5rem;">🎉🔓</div>
-          <h2 style="font-family: var(--font-heading); color: var(--univc-lime-bright); font-size: 2.2rem; margin-bottom: 0.5rem;">
-            PORTA DA CÚPULA DESTRAVADA!
-          </h2>
-          <p style="font-size: 1.1rem; max-width: 600px; margin: 0 auto 1.5rem auto; line-height: 1.6;">
-            Parabéns, Protagonista <strong>${this.currentStudent.name}</strong>! Você decodificou a fala icônica de Truman: 
-            <br><em style="color: var(--univc-lime-bright); font-size: 1.2rem; display: block; margin-top: 0.5rem;">"Caso eu não os veja: Bom dia, Boa tarde e Boa noite!"</em>
-          </p>
-          
-          <div class="score-breakdown-card" style="max-width: 500px; margin: 0 auto; text-align: left;">
-            <div style="font-weight: 800; font-family: var(--font-heading); color: var(--univc-lime-bright); margin-bottom: 0.5rem; text-transform: uppercase; font-size: 0.85rem;">
-              <i class="fa-solid fa-trophy"></i> Resumo da Pontuação do Enigma Final
-            </div>
-            <div class="score-breakdown-row">
-              <span class="score-breakdown-label"><i class="fa-solid fa-star"></i> Pontos Base (${errors} erro(s)):</span>
-              <span class="score-breakdown-val">+${basePoints} PTS</span>
-            </div>
-            <div class="score-breakdown-row">
-              <span class="score-breakdown-label"><i class="fa-solid fa-stopwatch"></i> Bônus Vel. Montagem (${elapsedSeconds}s):</span>
-              <span class="score-breakdown-val">+${timeBonus} PTS</span>
-            </div>
-            <div class="score-total-box">
-              <span style="font-weight: 800; font-family: var(--font-heading); text-transform: uppercase; color: white;">Total do Enigma:</span>
-              <span class="score-total-highlight">+${totalEarned} PTS</span>
-            </div>
-          </div>
-        `;
 
         this.saveStudent();
         this.updateHeaderBadges();
         this.renderLeaderboard();
+        this.renderTelaoLeaderboard();
       }
+
+      this.checkAndRenderUnlockedDome();
     } else {
       sounds.playError();
       this.currentStudent.finalPuzzleErrors = (this.currentStudent.finalPuzzleErrors || 0) + 1;
       this.saveStudent();
 
-      alert(`Frase incorreta ou incompleta! (Tentativa #${this.currentStudent.finalPuzzleErrors})\nSua montagem: "${userSentence || 'Vazia'}"\n\nPenalidade: -50 pts no valor base do enigma final.\nDica: Reúna os 10 fragmentos na ordem das estações 1 a 10.`);
+      alert(`Frase incorreta ou incompleta! (Tentativa #${this.currentStudent.finalPuzzleErrors})\n\nSua montagem: "${userSentence || 'Vazia'}"\n\nPenalidade: -50 pts no valor base do enigma final.\nDica: Reúna os 10 fragmentos na ordem das estações 1 a 10:\n"${EVENT_INFO.fullPassword.join(' ')}"`);
     }
   }
 
@@ -1393,6 +1415,7 @@ class App {
     this.renderStationsGrid();
     this.renderSentenceInventory();
     this.renderSentenceAssembly();
+    this.checkAndRenderUnlockedDome();
     this.renderLeaderboard();
   }
 }
