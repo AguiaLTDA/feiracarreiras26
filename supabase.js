@@ -1,7 +1,7 @@
 // Supabase Configuration & Realtime Sync Module for Seahaven UNIVC
 
-export const SUPABASE_URL = "https://snzuvksroqeszrjzfpyq.supabase.co"; 
-export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuenV2a3Nyb3Flc3pyanpmcHlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxNDYyNzAsImV4cCI6MjEwMTcyMjI3MH0.VjBtBZ4dmFEK_Qh2D4XSLck2vMQ4Y7KHEdBZojfxdGU";
+export const SUPABASE_URL = "https://iravhdeivbhfxupfzcqs.supabase.co";
+export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlyYXZoZGVpdmJoZnh1cGZ6Y3FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NzA0MzIsImV4cCI6MjEwODU0NjQzMn0.3MYuBOT-5r6ACviHpq5ZAN6yDfNJm3lAnHhrh4s1vUY";
 
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 

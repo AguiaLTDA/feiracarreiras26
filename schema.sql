@@ -66,7 +66,9 @@ USING (true);
 
 -- 6. Função e Trigger para atualizar automaticamente o campo 'last_update'
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+SET search_path = ''
+AS $$
 BEGIN
     NEW.last_update = timezone('utc'::text, now());
     RETURN NEW;
