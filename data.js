@@ -3,7 +3,7 @@
 export const EVENT_INFO = {
   title: "FEIRA DE CARREIRAS UNIVC 2026",
   subtitle: "SEAHAVEN UNIVC — O Último Episódio",
-  date: "12 de Agosto de 2026",
+  date: "30 de Outubro de 2026",
   location: "Centro Universitário Vale do Cricaré — Campus UNIVC",
   totalStations: 10
 };

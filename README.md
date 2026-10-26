@@ -1,6 +1,6 @@
 # Feira de Carreiras UNIVC 2026 — Seahaven UNIVC: O Último Episódio 🚀
 
-Plataforma oficial gamificada de ranking e trilha de desafios profissionais inspirada no filme **"O Show de Truman"**, desenvolvida para o **Centro Universitário Vale do Cricaré (UNIVC)** para a Feira de Carreiras do dia 12 de Agosto de 2026.
+Plataforma oficial gamificada de ranking e trilha de desafios profissionais inspirada no filme **"O Show de Truman"**, desenvolvida para o **Centro Universitário Vale do Cricaré (UNIVC)** para a Feira de Carreiras do dia 30 de Outubro de 2026.
 
 ![Identidade Visual UNIVC](WhatsApp%20Image%202026-08-06%20at%2015.47.55.jpeg)
 
