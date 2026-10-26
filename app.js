@@ -647,11 +647,6 @@ class App {
         </div>
 
         <div>
-          <div class="station-fragment-box">
-            <span>Status:</span>
-            <span class="fragment-word">${isCompleted ? '✔ Concluída' : 'Pendente'}</span>
-          </div>
-
           <button class="btn-primary btn-open-station" style="width: 100%; font-size: 0.9rem;" data-id="${station.id}">
             ${isCompleted ? '<i class="fa-solid fa-circle-check"></i> Revisar Desafio' : '<i class="fa-solid fa-play"></i> Iniciar Desafio'}
           </button>
