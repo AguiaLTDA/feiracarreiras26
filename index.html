@@ -46,11 +46,8 @@
       <button class="tab-btn" data-tab="estacoes">
         <i class="fa-solid fa-cubes-stacked"></i> 2. Estações de Desafio <span class="badge-count" id="badge-stations-done">🔒 Bloqueado</span>
       </button>
-      <button class="tab-btn" data-tab="senha">
-        <i class="fa-solid fa-key"></i> 3. Desafio da Cúpula <span class="badge-count" id="badge-fragments-count">🔒 Bloqueado</span>
-      </button>
       <button class="tab-btn" data-tab="ranking">
-        <i class="fa-solid fa-trophy"></i> 4. Ranking Ao Vivo <span class="badge-count" id="badge-ranking-pos">#--</span>
+        <i class="fa-solid fa-trophy"></i> 3. Ranking Ao Vivo <span class="badge-count" id="badge-ranking-pos">#--</span>
       </button>
       <span class="badge-count combo-badge" id="badge-combo-streak" style="display: none; background: linear-gradient(135deg, #f97316, #dc2626); color: white; font-weight: 800; font-size: 0.85rem; padding: 0.35rem 0.85rem; border-radius: 20px; box-shadow: 0 0 10px rgba(249, 115, 22, 0.4); border: 1px solid #fdba74; align-self: center; margin-left: 0.5rem;">
         🔥 Combo x0
@@ -70,11 +67,11 @@
         <p>
           Truman Burbank levou 30 anos para descobrir que vivia dentro de um estúdio. Vocês têm apenas algumas horas! 
           Ao percorrer as <strong>10 estações físicas do campus UNIVC</strong> (Auditório, NPJ, Clínica-Escola, Semiologia, Radiologia, Clínica Odontológica, Quadra, Lab Tech, Clínica Veterinária e Engenharias), 
-          você usará o conhecimento real de cada profissão para identificar as falhas do cenário, coletar os 10 fragmentos da frase de despedida e abrir a porta de saída da cúpula.
+          você usará o conhecimento real de cada profissão para identificar as falhas do cenário, somar pontos e subir no ranking ao vivo.
         </p>
         <div class="hero-tags">
           <span class="hero-tag"><i class="fa-solid fa-graduation-cap"></i> 10 Estações do Campus</span>
-          <span class="hero-tag"><i class="fa-solid fa-puzzle-piece"></i> 10 Fragmentos de Senha</span>
+          <span class="hero-tag"><i class="fa-solid fa-stopwatch"></i> Bônus por Tempo e Combo</span>
           <span class="hero-tag"><i class="fa-solid fa-award"></i> Ranking Gamificado</span>
         </div>
       </div>
@@ -273,76 +270,6 @@
       </div>
     </section>
 
-    <!-- Screen 3: Desafio da Cúpula / Senha Final -->
-    <section id="view-senha" class="view-section">
-      <!-- Lock Overlay Banner (Visible if registration is incomplete) -->
-      <div id="lock-overlay-senha" class="custom-card registration-lock-banner" style="display: none; text-align: center; padding: 3rem 1.5rem; margin-bottom: 2rem;">
-        <div style="font-size: 4rem; color: #eab308; margin-bottom: 1rem;">🔒</div>
-        <h2 style="font-family: var(--font-heading); color: var(--univc-emerald-dark); font-size: 1.8rem; margin-bottom: 0.75rem;">
-          Desafio da Cúpula Bloqueado: Conclua seu Cadastro
-        </h2>
-        <p style="color: var(--text-muted); font-size: 1.05rem; max-width: 620px; margin: 0 auto 1.5rem auto; line-height: 1.6;">
-          Para destravar a porta de saída da cúpula de Seahaven e testar sua frase de senha, você precisa registrar seu participante no Passo 1 e coletar os fragmentos.
-        </p>
-        <button class="btn-lime btn-go-cadastro" style="padding: 0.85rem 2rem; font-size: 1.1rem;">
-          <i class="fa-solid fa-id-card"></i> Ir para o Cadastro Agora
-        </button>
-      </div>
-
-      <!-- Main Password Content (Only visible if registered) -->
-      <div id="content-senha-container">
-        <div class="hero-box">
-          <h2><i class="fa-solid fa-door-open"></i> O Desafio da Cúpula: A Senha de Truman</h2>
-          <p>
-            Christof está no alto da torre de controle tentando convencê-lo a ficar. Para destravar a porta de saída da cúpula e 
-            acessar o campus real da UNIVC, você precisa organizar os 10 fragmentos coletados nas 10 estações do circuito.
-          </p>
-        </div>
-
-        <!-- Fragments Inventory -->
-        <div class="fragments-inventory">
-          <div class="flex-between">
-            <h3 style="font-family: var(--font-heading); color: var(--univc-emerald-dark);"><i class="fa-solid fa-layer-group"></i> Inventário de Fragmentos Coletados</h3>
-            <span id="label-fragments-progress" style="font-weight: 800; color: var(--univc-emerald-mid);">0 / 10 Desbloqueados</span>
-          </div>
-          <div id="container-unlocked-words" class="fragments-flex">
-            <!-- Rendered via JS -->
-          </div>
-        </div>
-
-        <!-- Assembly Box -->
-        <h3 style="font-family: var(--font-heading); color: var(--univc-emerald-dark); margin-bottom: 0.75rem;">
-          <i class="fa-solid fa-arrow-down-short-wide"></i> Monte a Frase da Senha Aqui (Clique nos fragmentos acima):
-        </h3>
-        <div id="area-sentence-assembly" class="sentence-assembly-area">
-          <div id="placeholder-text-assembly" style="color: rgba(255,255,255,0.4); font-weight: 600; width: 100%; text-align: center; padding-top: 2rem;">
-            Clique nas palavras acima para adicioná-las na frase...
-          </div>
-        </div>
-
-        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-          <button id="btn-clear-sentence" class="btn-secondary">
-            <i class="fa-solid fa-rotate-left"></i> Limpar Frase
-          </button>
-          <button id="btn-verify-password" class="btn-lime" style="padding: 0.9rem 2rem; font-size: 1.1rem;">
-            <i class="fa-solid fa-lock-open"></i> Testar Senha da Cúpula
-          </button>
-        </div>
-
-        <!-- Celebration Box when unlocked -->
-        <div id="dome-door-unlocked" class="dome-door-unlocked">
-          <i class="fa-solid fa-door-open fa-4x" style="color: var(--univc-lime-bright); margin-bottom: 1rem;"></i>
-          <h2 style="font-family: var(--font-heading); font-size: 2.2rem; margin-bottom: 0.5rem;">A PORTA DA CÚPULA SE ABRIU!</h2>
-          <p style="font-size: 1.3rem; max-width: 800px; margin: 0 auto 1.5rem auto; font-family: var(--font-heading); font-weight: 800; color: var(--univc-lime-bright);">
-            "CASO EU NÃO OS VEJA MAIS: BOM DIA E BOA NOITE!"
-          </p>
-          <p style="font-size: 1rem; opacity: 0.95;">
-            Parabéns! Você desvendou a ilusão de Seahaven e conquistou <strong>+500 Pontos Bônus</strong> no Ranking da Feira de Carreiras UNIVC!
-          </p>
-        </div>
-      </div>
-    </section>
-
     <!-- Screen 4: Ranking Gamificado -->
     <section id="view-ranking" class="view-section">
       <div class="flex-between" style="flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
@@ -412,8 +339,6 @@
               <th>Participante / Grupo (Líder)</th>
               <th>Escola de Origem</th>
               <th>Estações</th>
-              <th>Fragmentos</th>
-              <th>Senha Final</th>
               <th>Pontuação</th>
             </tr>
           </thead>
@@ -452,11 +377,18 @@
               <i class="fa-solid fa-user-gear"></i> Painel de Administração — UNIVC 2026
             </h2>
             <p style="color: var(--text-muted); font-weight: 600;">Gerenciamento completo de alunos individuais e grupos, contatos de líderes e relatórios.</p>
+            <p style="color: var(--univc-emerald-mid); font-weight: 800; margin-top: 0.25rem;"><i class="fa-solid fa-flag-checkered"></i> Rodada atual: <span id="admin-current-round">--</span></p>
           </div>
 
           <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
             <button id="btn-admin-export-csv" class="btn-lime" style="padding: 0.75rem 1.25rem;">
               <i class="fa-solid fa-file-csv"></i> Exportar Participantes (Excel / CSV)
+            </button>
+            <button id="btn-admin-export-json" class="btn-secondary">
+              <i class="fa-solid fa-database"></i> Exportar Base Completa (JSON)
+            </button>
+            <button id="btn-admin-new-round" class="btn-primary">
+              <i class="fa-solid fa-box-archive"></i> Salvar Base e Reiniciar Contagem
             </button>
             <button id="btn-admin-clear-db" class="btn-secondary" style="color: #ef4444; border: 1px solid #fca5a5;">
               <i class="fa-solid fa-triangle-exclamation"></i> Zerar Base (Pré-Evento)
@@ -482,8 +414,8 @@
             <h3 id="stat-total-schools" style="font-size: 2rem; color: var(--univc-emerald-mid); margin: 0.25rem 0;">0</h3>
           </div>
           <div class="custom-card" style="padding: 1.25rem; text-align: center;">
-            <small style="color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Senhas Concluídas</small>
-            <h3 id="stat-completed-passwords" style="font-size: 2rem; color: var(--univc-neon-green); margin: 0.25rem 0;">0</h3>
+            <small style="color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Concluíram as 10 Estações</small>
+            <h3 id="stat-completed-all" style="font-size: 2rem; color: var(--univc-neon-green); margin: 0.25rem 0;">0</h3>
           </div>
         </div>
 
@@ -517,6 +449,30 @@
               <!-- Rendered via JS -->
             </tbody>
           </table>
+        </div>
+
+        <!-- Bases Salvas (Rodadas Arquivadas) -->
+        <div class="custom-card" style="margin-top: 1.5rem;">
+          <h3><i class="fa-solid fa-box-archive"></i> Bases Salvas (Rodadas Anteriores)</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+            Cada vez que a base é salva e reiniciada, os respondentes e o ranqueamento final daquela rodada ficam guardados aqui para exportação.
+          </p>
+          <div class="ranking-table-container">
+            <table class="ranking-table">
+              <thead>
+                <tr>
+                  <th>Rodada</th>
+                  <th>Salva em</th>
+                  <th>Respondentes</th>
+                  <th>1º Lugar</th>
+                  <th style="text-align: center;">Exportar</th>
+                </tr>
+              </thead>
+              <tbody id="table-admin-archives">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>

@@ -39,8 +39,6 @@ export async function syncTeamToSupabase(student) {
     school: student.school,
     avatar: student.avatar || (student.registrationType === 'group' ? '👥' : '🎓'),
     completed_stations: student.completedStations || [],
-    unlocked_fragments: student.unlockedFragments || [],
-    solved_final_puzzle: student.solvedFinalPuzzle || false,
     score: student.score || 0,
     time_spent: student.timeSpent || '0m',
     last_update: new Date().toISOString()
@@ -67,8 +65,6 @@ export async function syncTeamToSupabase(student) {
         school: student.school,
         avatar: student.avatar || (student.registrationType === 'group' ? '👥' : '🎓'),
         completed_stations: student.completedStations || [],
-        unlocked_fragments: student.unlockedFragments || [],
-        solved_final_puzzle: student.solvedFinalPuzzle || false,
         score: student.score || 0,
         time_spent: student.timeSpent || '0m',
         last_update: new Date().toISOString()
@@ -124,8 +120,6 @@ export async function fetchTeamsFromSupabase() {
       school: row.school,
       avatar: row.avatar || (row.registration_type === 'group' ? '👥' : '🎓'),
       completedStations: row.completed_stations || [],
-      unlockedFragments: row.unlocked_fragments || [],
-      solvedFinalPuzzle: row.solved_final_puzzle,
       score: row.score,
       timeSpent: row.time_spent,
       lastUpdate: new Date(row.last_update).toLocaleTimeString()
@@ -186,6 +180,100 @@ export async function clearAllTeamsFromSupabase() {
   } catch (e) {
     console.error("Erro de reset Supabase:", e);
     return false;
+  }
+}
+
+/**
+ * Lê a rodada vigente (alterada a cada "Salvar Base e Reiniciar Contagem")
+ */
+export async function fetchCurrentRound() {
+  if (!supabase) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'current_round')
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data.value;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Define uma nova rodada vigente
+ */
+export async function setCurrentRound(roundId) {
+  if (!supabase) return false;
+
+  try {
+    const { error } = await supabase
+      .from('app_settings')
+      .upsert({ key: 'current_round', value: roundId }, { onConflict: 'key' });
+
+    if (error) {
+      console.error("Erro ao definir rodada no Supabase:", error);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error("Erro de rede Supabase:", e);
+    return false;
+  }
+}
+
+/**
+ * Arquiva os participantes ranqueados de uma rodada na tabela teams_archive
+ */
+export async function archiveTeamsToSupabase(roundId, archivedAt, rankedTeams) {
+  if (!supabase) return null;
+
+  const rows = rankedTeams.map((team, idx) => ({
+    round_id: roundId,
+    archived_at: archivedAt,
+    final_rank: idx + 1,
+    team_id: team.id,
+    data: team
+  }));
+
+  try {
+    const { error } = await supabase.from('teams_archive').insert(rows);
+    if (error) {
+      console.error("Erro ao arquivar rodada no Supabase:", error);
+      return false;
+    }
+    console.log(`📦 Rodada arquivada no Supabase (${rows.length} registros).`);
+    return true;
+  } catch (e) {
+    console.error("Erro de rede Supabase:", e);
+    return false;
+  }
+}
+
+/**
+ * Busca todas as rodadas arquivadas
+ */
+export async function fetchArchivesFromSupabase() {
+  if (!supabase) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from('teams_archive')
+      .select('round_id, archived_at, final_rank, team_id, data')
+      .order('archived_at', { ascending: false })
+      .order('final_rank', { ascending: true });
+
+    if (error) {
+      console.error("Erro ao buscar bases salvas no Supabase:", error);
+      return null;
+    }
+    return data;
+  } catch (e) {
+    console.error("Erro de busca Supabase:", e);
+    return null;
   }
 }
 

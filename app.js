@@ -1,8 +1,8 @@
 // Main Application Controller - Seahaven UNIVC Feira de Carreiras 2026 (Com Cadastro Individual & Grupo de Alunos)
 
-import { EVENT_INFO, STATIONS, INITIAL_TEAMS } from './data.js';
+import { STATIONS, INITIAL_TEAMS } from './data.js';
 import { sounds } from './audio.js';
-import { syncTeamToSupabase, fetchTeamsFromSupabase, deleteTeamFromSupabase, clearAllTeamsFromSupabase, subscribeToRealtimeLeaderboard } from './supabase.js';
+import { syncTeamToSupabase, fetchTeamsFromSupabase, deleteTeamFromSupabase, clearAllTeamsFromSupabase, subscribeToRealtimeLeaderboard, fetchCurrentRound, setCurrentRound, archiveTeamsToSupabase, fetchArchivesFromSupabase } from './supabase.js';
 
 const ADMIN_PASSWORD = 'admin2026';
 
@@ -11,7 +11,7 @@ class App {
     this.currentStudent = null;
     this.teams = [];
     this.selectedStationId = null;
-    this.assembledWords = [];
+    this.currentRound = null;
     this.activeAreaFilter = 'ALL';
     this.activeSchoolFilter = 'ALL';
     this.searchQuery = '';
@@ -25,6 +25,7 @@ class App {
     this.loadState();
     this.bindEvents();
     this.render();
+    await this.syncRound();
 
     // Check hash URL
     if (window.location.hash === '#admin') {
@@ -54,6 +55,7 @@ class App {
 
     // Polling contínuo automático a cada 4s para garantir que o Telão e Ranking atualizem sem falha
     setInterval(async () => {
+      await this.syncRound();
       const latestTeams = await fetchTeamsFromSupabase();
       if (latestTeams) {
         const hasChanges = JSON.stringify(latestTeams) !== JSON.stringify(this.teams);
@@ -71,38 +73,14 @@ class App {
   }
 
   loadState() {
+    this.currentRound = localStorage.getItem('univc_current_round');
     const savedStudent = localStorage.getItem('univc_current_student');
     if (savedStudent) {
       this.currentStudent = JSON.parse(savedStudent);
       if (this.currentStudent.comboStreak === undefined) this.currentStudent.comboStreak = 0;
       if (!this.currentStudent.stationErrors) this.currentStudent.stationErrors = {};
-      if (this.currentStudent.finalPuzzleErrors === undefined) this.currentStudent.finalPuzzleErrors = 0;
-      if (!this.currentStudent.assembledWords) this.currentStudent.assembledWords = [];
-      this.assembledWords = [...this.currentStudent.assembledWords];
     } else {
-      this.currentStudent = {
-        id: 'student-user-' + Date.now(),
-        registrationType: 'individual',
-        name: '',
-        groupName: '',
-        leaderName: '',
-        groupSize: 1,
-        whatsapp: '',
-        school: '',
-        preferredCourse: '',
-        avatar: '🎓',
-        completedStations: [],
-        unlockedFragments: [],
-        solvedFinalPuzzle: false,
-        assembledWords: [],
-        score: 0,
-        comboStreak: 0,
-        stationErrors: {},
-        finalPuzzleErrors: 0,
-        timeSpent: '0m',
-        lastUpdate: new Date().toLocaleTimeString()
-      };
-      this.assembledWords = [];
+      this.currentStudent = this.createEmptyStudent();
     }
 
     const savedTeams = localStorage.getItem('univc_all_teams');
@@ -118,12 +96,61 @@ class App {
     }
   }
 
+  createEmptyStudent() {
+    return {
+      id: 'student-user-' + Date.now(),
+      roundId: this.currentRound,
+      registrationType: 'individual',
+      name: '',
+      groupName: '',
+      leaderName: '',
+      groupSize: 1,
+      whatsapp: '',
+      school: '',
+      preferredCourse: '',
+      avatar: '🎓',
+      completedStations: [],
+      score: 0,
+      comboStreak: 0,
+      stationErrors: {},
+      timeSpent: '0m',
+      lastUpdate: new Date().toLocaleTimeString()
+    };
+  }
+
+  /**
+   * Verifica a rodada vigente no banco. Se o administrador reiniciou a contagem,
+   * o participante salvo neste navegador pertence à rodada anterior e é descartado.
+   */
+  async syncRound() {
+    const round = (await fetchCurrentRound()) || localStorage.getItem('univc_current_round');
+    if (!round) return;
+    this.currentRound = round;
+    localStorage.setItem('univc_current_round', round);
+
+    // roundId === null: cadastro feito antes da primeira consulta da rodada neste aparelho
+    if (this.isUserRegistered() && this.currentStudent.roundId !== null && this.currentStudent.roundId !== round) {
+      this.resetLocalStudent();
+    } else {
+      this.currentStudent.roundId = round;
+    }
+  }
+
+  resetLocalStudent() {
+    // Nova rodada iniciada pela organização: descarta o crachá antigo e recarrega a página
+    localStorage.removeItem('univc_current_student');
+    localStorage.removeItem('univc_all_teams');
+    this.currentStudent = this.createEmptyStudent();
+    window.location.reload();
+  }
+
   isUserRegistered() {
     return Boolean(this.currentStudent && this.currentStudent.name && this.currentStudent.name.trim() !== '' && this.currentStudent.school);
   }
 
   saveStudent() {
     if (!this.currentStudent.name) return;
+    this.currentStudent.roundId = this.currentRound;
     this.currentStudent.lastUpdate = new Date().toLocaleTimeString();
     localStorage.setItem('univc_current_student', JSON.stringify(this.currentStudent));
     this.updateUserInTeams();
@@ -298,18 +325,6 @@ class App {
       this.closeModal();
     });
 
-    // Clear Sentence
-    document.getElementById('btn-clear-sentence')?.addEventListener('click', () => {
-      sounds.playClick();
-      this.assembledWords = [];
-      this.renderSentenceAssembly();
-    });
-
-    // Verify Password
-    document.getElementById('btn-verify-password')?.addEventListener('click', () => {
-      this.verifySentencePassword();
-    });
-
     // Ranking Filters & Search
     document.getElementById('search-ranking')?.addEventListener('input', (e) => {
       this.searchQuery = e.target.value.toLowerCase();
@@ -359,6 +374,17 @@ class App {
       this.exportAdminCSV();
     });
 
+    // Admin Export JSON (base completa)
+    document.getElementById('btn-admin-export-json')?.addEventListener('click', () => {
+      sounds.playSuccess();
+      this.exportAdminJSON();
+    });
+
+    // Admin: salvar base atual e reiniciar contagem/ranqueamento
+    document.getElementById('btn-admin-new-round')?.addEventListener('click', () => {
+      this.handleAdminNewRound();
+    });
+
     // Admin Clear DB (Pré-Evento)
     document.getElementById('btn-admin-clear-db')?.addEventListener('click', async () => {
       if (confirm('ATENÇÃO ORGANIZAÇÃO: Deseja zerar completamente a base de dados do evento? Isso apagará todos os cadastros de teste do banco e deste navegador.')) {
@@ -367,24 +393,13 @@ class App {
           this.teams = [];
           localStorage.removeItem('univc_all_teams');
           localStorage.removeItem('univc_current_student');
-          this.currentStudent = {
-            id: 'student-user-' + Date.now(),
-            registrationType: 'individual',
-            name: '',
-            groupName: '',
-            leaderName: '',
-            groupSize: 1,
-            whatsapp: '',
-            school: '',
-            preferredCourse: '',
-            avatar: '🎓',
-            completedStations: [],
-            unlockedFragments: [],
-            solvedFinalPuzzle: false,
-            score: 0,
-            timeSpent: '0m',
-            lastUpdate: new Date().toLocaleTimeString()
-          };
+
+          // Nova rodada: descarta os crachás de teste salvos nos celulares dos participantes
+          const newRound = new Date().toISOString();
+          await setCurrentRound(newRound);
+          this.currentRound = newRound;
+          localStorage.setItem('univc_current_round', newRound);
+          this.currentStudent = this.createEmptyStudent();
 
           await clearAllTeamsFromSupabase();
 
@@ -437,7 +452,7 @@ class App {
     document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
     document.getElementById(`view-${tabId}`)?.classList.add('active');
 
-    // Handle Lock state for Estações and Senha
+    // Handle Lock state for Estações
     const isRegistered = this.isUserRegistered();
 
     if (tabId === 'estacoes') {
@@ -449,22 +464,6 @@ class App {
       } else {
         if (lockOverlay) lockOverlay.style.display = 'none';
         if (content) content.style.display = 'block';
-      }
-    }
-
-    if (tabId === 'senha') {
-      const lockOverlay = document.getElementById('lock-overlay-senha');
-      const content = document.getElementById('content-senha-container');
-      if (!isRegistered) {
-        if (lockOverlay) lockOverlay.style.display = 'block';
-        if (content) content.style.display = 'none';
-      } else {
-        if (lockOverlay) lockOverlay.style.display = 'none';
-        if (content) content.style.display = 'block';
-        if (!this.finalPuzzleStartTime) this.finalPuzzleStartTime = Date.now();
-        this.renderSentenceInventory();
-        this.renderSentenceAssembly();
-        this.checkAndRenderUnlockedDome();
       }
     }
 
@@ -597,20 +596,6 @@ class App {
       }
     }
 
-    // Tab 3 status badge
-    const badgeFragmentsCount = document.getElementById('badge-fragments-count');
-    if (badgeFragmentsCount) {
-      if (isRegistered) {
-        badgeFragmentsCount.textContent = `${this.currentStudent.unlockedFragments ? this.currentStudent.unlockedFragments.length : 0}/10`;
-        badgeFragmentsCount.style.background = 'var(--univc-emerald-dark)';
-        badgeFragmentsCount.style.color = 'white';
-      } else {
-        badgeFragmentsCount.textContent = '🔒 Bloqueado';
-        badgeFragmentsCount.style.background = '#fee2e2';
-        badgeFragmentsCount.style.color = '#991b1b';
-      }
-    }
-
     // Calculate user rank
     const sorted = [...this.teams].sort((a, b) => b.score - a.score);
     const rank = sorted.findIndex(t => t.id === this.currentStudent.id) + 1;
@@ -663,8 +648,8 @@ class App {
 
         <div>
           <div class="station-fragment-box">
-            <span>Fragmento de Senha:</span>
-            <span class="fragment-word">${isCompleted ? `"${station.fragment}"` : '🔒 Bloqueado'}</span>
+            <span>Status:</span>
+            <span class="fragment-word">${isCompleted ? '✔ Concluída' : 'Pendente'}</span>
           </div>
 
           <button class="btn-primary btn-open-station" style="width: 100%; font-size: 0.9rem;" data-id="${station.id}">
@@ -752,7 +737,7 @@ class App {
       feedbackBox.style.border = '2px solid var(--univc-lime)';
       feedbackBox.innerHTML = `
         <strong style="color: var(--univc-emerald-dark);"><i class="fa-solid fa-circle-check"></i> Estação Concluída!</strong>
-        <p style="margin-top: 0.25rem; font-size: 0.9rem;">Você já liberou o fragmento <strong>"${station.fragment}"</strong>!</p>
+        <p style="margin-top: 0.25rem; font-size: 0.9rem;">Você já pontuou nesta estação.</p>
       `;
     }
 
@@ -805,10 +790,8 @@ class App {
       const totalEarned = basePoints + timeBonus + comboBonus;
 
       if (!this.currentStudent.completedStations) this.currentStudent.completedStations = [];
-      if (!this.currentStudent.unlockedFragments) this.currentStudent.unlockedFragments = [];
 
       this.currentStudent.completedStations.push(station.id);
-      this.currentStudent.unlockedFragments.push(station.fragment);
       this.currentStudent.score += totalEarned;
 
       feedbackBox.style.background = 'var(--univc-emerald-dark)';
@@ -816,7 +799,7 @@ class App {
       feedbackBox.style.border = '2px solid var(--univc-lime-bright)';
       feedbackBox.innerHTML = `
         <strong style="color: var(--univc-lime-bright); font-size: 1.15rem;"><i class="fa-solid fa-circle-check"></i> Resposta Correta! +${totalEarned} PTS!</strong>
-        <p style="margin-top: 0.35rem; font-size: 0.95rem; color: white;">Você desvendou a falha em <strong>${station.location}</strong> e desbloqueou: <span style="color: var(--univc-lime-bright); font-weight: 900; font-size: 1.15rem;">"${station.fragment}"</span></p>
+        <p style="margin-top: 0.35rem; font-size: 0.95rem; color: white;">Você desvendou a falha em <strong>${station.location}</strong>!</p>
 
         <div class="score-breakdown-card">
           <div style="font-weight: 800; font-family: var(--font-heading); color: var(--univc-lime-bright); margin-bottom: 0.5rem; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">
@@ -845,7 +828,6 @@ class App {
       this.saveStudent();
       this.updateHeaderBadges();
       this.renderStationsGrid();
-      this.renderSentenceInventory();
     } else {
       sounds.playError();
       buttonElement.style.borderColor = '#ef4444';
@@ -874,148 +856,6 @@ class App {
       this.stationTimerInterval = null;
     }
     document.getElementById('modal-challenge').classList.remove('active');
-  }
-
-  renderSentenceInventory() {
-    const container = document.getElementById('container-unlocked-words');
-    const label = document.getElementById('label-fragments-progress');
-    if (!container) return;
-
-    container.innerHTML = '';
-    const unlocked = this.currentStudent.unlockedFragments || [];
-    label.textContent = `${unlocked.length} / 10 Desbloqueados`;
-
-    STATIONS.forEach(st => {
-      const isUnlocked = unlocked.includes(st.fragment);
-      const isUsed = this.assembledWords.includes(st.fragment);
-
-      const chip = document.createElement('div');
-      chip.className = `word-chip ${isUsed ? 'used' : ''}`;
-      chip.style.opacity = isUnlocked ? (isUsed ? '0.3' : '1') : '0.25';
-      chip.style.pointerEvents = isUnlocked && !isUsed ? 'auto' : 'none';
-      chip.textContent = isUnlocked ? st.fragment : '???';
-
-      if (isUnlocked && !isUsed) {
-        chip.addEventListener('click', () => {
-          sounds.playClick();
-          this.assembledWords.push(st.fragment);
-          this.currentStudent.assembledWords = [...this.assembledWords];
-          this.saveStudent();
-          this.renderSentenceInventory();
-          this.renderSentenceAssembly();
-        });
-      }
-
-      container.appendChild(chip);
-    });
-  }
-
-  renderSentenceAssembly() {
-    const area = document.getElementById('area-sentence-assembly');
-    if (!area) return;
-
-    area.innerHTML = '';
-
-    if (this.assembledWords.length === 0) {
-      area.innerHTML = `
-        <div id="placeholder-text-assembly" style="color: rgba(255,255,255,0.4); font-weight: 600; width: 100%; text-align: center; padding-top: 2rem;">
-          Clique nas palavras acima para adicioná-las na frase...
-        </div>
-      `;
-      return;
-    }
-
-    this.assembledWords.forEach((word, index) => {
-      const placed = document.createElement('div');
-      placed.className = 'placed-word';
-      placed.textContent = word;
-
-      placed.addEventListener('click', () => {
-        sounds.playClick();
-        this.assembledWords.splice(index, 1);
-        this.currentStudent.assembledWords = [...this.assembledWords];
-        this.saveStudent();
-        this.renderSentenceInventory();
-        this.renderSentenceAssembly();
-      });
-
-      area.appendChild(placed);
-    });
-  }
-
-  checkAndRenderUnlockedDome() {
-    const domeContainer = document.getElementById('dome-door-unlocked');
-    if (!domeContainer) return;
-
-    if (this.currentStudent && this.currentStudent.solvedFinalPuzzle) {
-      domeContainer.classList.add('active');
-      const errors = this.currentStudent.finalPuzzleErrors || 0;
-      const penalty = errors * 50;
-      const basePoints = Math.max(200, 500 - penalty);
-      const earned = this.currentStudent.finalPuzzleScore || basePoints;
-
-      domeContainer.innerHTML = `
-        <div style="font-size: 3rem; margin-bottom: 0.5rem;">🎉🔓</div>
-        <h2 style="font-family: var(--font-heading); color: var(--univc-lime-bright); font-size: 2.2rem; margin-bottom: 0.5rem;">
-          PORTA DA CÚPULA DESTRAVADA!
-        </h2>
-        <p style="font-size: 1.1rem; max-width: 600px; margin: 0 auto 1.5rem auto; line-height: 1.6;">
-          Parabéns, Protagonista <strong>${this.currentStudent.name}</strong>! Você decodificou a fala icônica de Truman: 
-          <br><em style="color: var(--univc-lime-bright); font-size: 1.2rem; display: block; margin-top: 0.5rem;">"${EVENT_INFO.fullQuote}"</em>
-        </p>
-        
-        <div class="score-breakdown-card" style="max-width: 500px; margin: 0 auto; text-align: left;">
-          <div style="font-weight: 800; font-family: var(--font-heading); color: var(--univc-lime-bright); margin-bottom: 0.5rem; text-transform: uppercase; font-size: 0.85rem;">
-            <i class="fa-solid fa-trophy"></i> Desafio Concluído com Sucesso! (+${earned} PTS)
-          </div>
-          <div class="score-breakdown-row">
-            <span class="score-breakdown-label"><i class="fa-solid fa-star"></i> Status da Cúpula:</span>
-            <span class="score-breakdown-val" style="color: var(--univc-lime-bright);">DESBLOQUEADO ✔</span>
-          </div>
-          <div class="score-total-box">
-            <span style="font-weight: 800; font-family: var(--font-heading); text-transform: uppercase; color: white;">Status Final:</span>
-            <span class="score-total-highlight">PROTAGONISTA LIVRE 🚀</span>
-          </div>
-        </div>
-      `;
-    }
-  }
-
-  verifySentencePassword() {
-    const targetSentence = EVENT_INFO.fullPassword.join(' ');
-    const userSentence = this.assembledWords.join(' ');
-
-    if (!this.currentStudent.finalPuzzleErrors) this.currentStudent.finalPuzzleErrors = 0;
-
-    if (userSentence === targetSentence) {
-      sounds.playFanfare();
-
-      if (!this.currentStudent.solvedFinalPuzzle) {
-        const errors = this.currentStudent.finalPuzzleErrors || 0;
-        const penalty = errors * 50;
-        const basePoints = Math.max(200, 500 - penalty);
-        const elapsedSeconds = Math.max(0, Math.floor((Date.now() - (this.finalPuzzleStartTime || Date.now())) / 1000));
-        const timeBonus = Math.max(0, 100 - elapsedSeconds);
-        const totalEarned = basePoints + timeBonus;
-
-        this.currentStudent.solvedFinalPuzzle = true;
-        this.currentStudent.finalPuzzleScore = totalEarned;
-        this.currentStudent.score += totalEarned;
-
-        this.saveStudent();
-        this.updateHeaderBadges();
-        this.renderLeaderboard();
-        this.renderTelaoLeaderboard();
-      }
-
-      this.checkAndRenderUnlockedDome();
-    } else {
-      sounds.playError();
-      this.currentStudent.finalPuzzleErrors = (this.currentStudent.finalPuzzleErrors || 0) + 1;
-      this.saveStudent();
-
-      alert(`Frase incorreta ou incompleta! (Tentativa #${this.currentStudent.finalPuzzleErrors})\n\nSua montagem: "${userSentence || 'Vazia'}"\n\nPenalidade: -50 pts no valor base do enigma final.\nDica: Reúna os 10 fragmentos na ordem das estações 1 a 10:\n"${EVENT_INFO.fullPassword.join(' ')}"`);
-    }
   }
 
   renderLeaderboard() {
@@ -1077,7 +917,7 @@ class App {
     if (sorted.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+          <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">
             Nenhum aluno ou grupo cadastrado ainda. Seja o primeiro a se registrar!
           </td>
         </tr>
@@ -1107,8 +947,6 @@ class App {
         </td>
         <td>${team.school || '--'}</td>
         <td><strong style="color: var(--univc-emerald-dark);">${team.completedStations?.length || 0}/10</strong></td>
-        <td>${team.unlockedFragments?.length || 0}</td>
-        <td>${team.solvedFinalPuzzle ? '<span style="color: var(--univc-neon-green); font-weight: 800;"><i class="fa-solid fa-circle-check"></i> Desbloqueada (+500)</span>' : '<span style="color: #94a3b8;">Pendente</span>'}</td>
         <td><strong style="font-size: 1.1rem; color: var(--univc-emerald-mid); font-family: var(--font-heading);">${team.score} PTS</strong></td>
       `;
 
@@ -1204,6 +1042,7 @@ class App {
       if (authBox) authBox.style.display = 'none';
       if (dashBox) dashBox.style.display = 'block';
       this.renderAdminDashboard();
+      this.renderAdminArchives();
     } else {
       if (authBox) authBox.style.display = 'block';
       if (dashBox) dashBox.style.display = 'none';
@@ -1218,12 +1057,14 @@ class App {
     const totalRegistrations = this.teams.length;
     const totalPeopleEstimated = this.teams.reduce((acc, t) => acc + (parseInt(t.groupSize, 10) || 1), 0);
     const uniqueSchools = new Set(this.teams.map(t => t.school).filter(Boolean)).size;
-    const completedPasswords = this.teams.filter(t => t.solvedFinalPuzzle).length;
+    const completedAll = this.teams.filter(t => (t.completedStations?.length || 0) >= STATIONS.length).length;
 
     document.getElementById('stat-total-students').textContent = totalRegistrations;
     document.getElementById('stat-total-people').textContent = totalPeopleEstimated;
     document.getElementById('stat-total-schools').textContent = uniqueSchools;
-    document.getElementById('stat-completed-passwords').textContent = completedPasswords;
+    document.getElementById('stat-completed-all').textContent = completedAll;
+    const roundLabel = document.getElementById('admin-current-round');
+    if (roundLabel) roundLabel.textContent = this.formatRound(this.currentRound);
 
     // Filter & Sort
     let sorted = [...this.teams].sort((a, b) => b.score - a.score);
@@ -1374,48 +1215,187 @@ class App {
     }
   }
 
+  formatRound(roundId) {
+    if (!roundId) return 'Rodada inicial';
+    const date = new Date(roundId);
+    if (isNaN(date.getTime())) return roundId;
+    return `Iniciada em ${date.toLocaleString('pt-BR')}`;
+  }
+
+  rankTeams(teams) {
+    return [...teams].sort((a, b) => (b.score || 0) - (a.score || 0));
+  }
+
+  downloadFile(content, fileName, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  buildCSV(rankedTeams) {
+    const headers = ["Posicao", "Tipo_Cadastro", "Nome_Participante_Ou_Grupo", "Lider_Responsavel", "Qtd_Alunos_Grupo", "WhatsApp_Lider", "Escola_Origem", "Curso_Pretendido", "Estacoes_Concluidas", "Pontuacao", "Ultima_Atualizacao"];
+    const esc = (v) => `"${String(v || '').replace(/"/g, '""')}"`;
+
+    const rows = rankedTeams.map((t, idx) => [
+      idx + 1,
+      esc(t.registrationType === 'group' ? 'GRUPO' : 'INDIVIDUAL'),
+      esc(t.registrationType === 'group' ? t.groupName : t.name),
+      esc(t.registrationType === 'group' ? t.leaderName : t.name),
+      t.registrationType === 'group' ? (t.groupSize || 1) : 1,
+      esc(t.whatsapp),
+      esc(t.school),
+      esc(t.preferredCourse),
+      t.completedStations ? t.completedStations.length : 0,
+      t.score || 0,
+      esc(t.lastUpdate)
+    ]);
+
+    return "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+  }
+
   exportAdminCSV() {
     if (this.teams.length === 0) {
       alert('Não há dados de alunos para exportar.');
       return;
     }
+    const csv = this.buildCSV(this.rankTeams(this.teams));
+    this.downloadFile(csv, `relatorio_alunos_univc_2026_${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv;charset=utf-8;');
+  }
 
-    const headers = ["Posicao", "Tipo_Cadastro", "Nome_Participante_Ou_Grupo", "Lider_Responsavel", "Qtd_Alunos_Grupo", "WhatsApp_Lider", "Escola_Origem", "Curso_Pretendido", "Estacoes_Concluidas", "Senha_Final", "Pontuacao", "Ultima_Atualizacao"];
-    const sorted = [...this.teams].sort((a, b) => b.score - a.score);
+  exportAdminJSON() {
+    if (this.teams.length === 0) {
+      alert('Não há dados de alunos para exportar.');
+      return;
+    }
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      round: this.currentRound || 'inicial',
+      total: this.teams.length,
+      participants: this.rankTeams(this.teams).map((t, idx) => ({ rank: idx + 1, ...t }))
+    };
+    this.downloadFile(JSON.stringify(payload, null, 2), `base_univc_2026_${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
+  }
 
-    const rows = sorted.map((t, idx) => [
-      idx + 1,
-      `"${t.registrationType === 'group' ? 'GRUPO' : 'INDIVIDUAL'}"`,
-      `"${((t.registrationType === 'group' ? t.groupName : t.name) || '').replace(/"/g, '""')}"`,
-      `"${((t.registrationType === 'group' ? t.leaderName : t.name) || '').replace(/"/g, '""')}"`,
-      t.registrationType === 'group' ? (t.groupSize || 1) : 1,
-      `"${(t.whatsapp || '').replace(/"/g, '""')}"`,
-      `"${(t.school || '').replace(/"/g, '""')}"`,
-      `"${(t.preferredCourse || '').replace(/"/g, '""')}"`,
-      t.completedStations ? t.completedStations.length : 0,
-      t.solvedFinalPuzzle ? "SIM" : "NAO",
-      t.score || 0,
-      `"${t.lastUpdate || ''}"`
-    ]);
+  /**
+   * Salva a base atual como rodada arquivada (com ranqueamento final),
+   * baixa o CSV de segurança e reinicia contagem e ranking para uma nova rodada.
+   */
+  async handleAdminNewRound() {
+    const total = this.teams.length;
+    if (!confirm(`Salvar a base atual (${total} registro(s)) e reiniciar a contagem e o ranqueamento de respondentes?\n\nA base será arquivada em "Bases Salvas" e um CSV será baixado como cópia de segurança.`)) return;
 
-    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `relatorio_alunos_univc_2026_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    sounds.playClick();
+    const ranked = this.rankTeams(this.teams);
+    const previousRound = this.currentRound || 'inicial';
+    const archivedAt = new Date().toISOString();
+
+    if (ranked.length > 0) {
+      this.downloadFile(this.buildCSV(ranked), `rodada_univc_${archivedAt.slice(0, 19).replace(/[:T]/g, '-')}.csv`, 'text/csv;charset=utf-8;');
+
+      const ok = await archiveTeamsToSupabase(previousRound, archivedAt, ranked);
+      if (ok === false) {
+        alert('Não foi possível arquivar a base no Supabase (verifique se o schema.sql atualizado foi executado). Nada foi apagado. O CSV baixado contém os dados atuais.');
+        return;
+      }
+      // Cópia local das rodadas arquivadas (também usada quando o Supabase não está configurado)
+      const localArchives = JSON.parse(localStorage.getItem('univc_archives') || '[]');
+      ranked.forEach((t, idx) => localArchives.push({ round_id: previousRound, archived_at: archivedAt, final_rank: idx + 1, team_id: t.id, data: t }));
+      localStorage.setItem('univc_archives', JSON.stringify(localArchives));
+    }
+
+    const newRound = new Date().toISOString();
+    await setCurrentRound(newRound);
+    await clearAllTeamsFromSupabase();
+
+    this.currentRound = newRound;
+    localStorage.setItem('univc_current_round', newRound);
+    localStorage.removeItem('univc_current_student');
+    this.teams = [];
+    this.saveTeams();
+    this.currentStudent = this.createEmptyStudent();
+
+    sounds.playSuccess();
+    alert(`Nova rodada iniciada! ${ranked.length} registro(s) foram salvos em "Bases Salvas" e o ranking foi zerado.`);
+
+    this.render();
+    this.renderTelaoLeaderboard();
+    this.renderAdminDashboard();
+    this.renderAdminArchives();
+  }
+
+  async getArchives() {
+    const rows = (await fetchArchivesFromSupabase()) || JSON.parse(localStorage.getItem('univc_archives') || '[]');
+    const rounds = new Map();
+    rows.forEach(row => {
+      const key = `${row.round_id}|${row.archived_at}`;
+      if (!rounds.has(key)) rounds.set(key, { roundId: row.round_id, archivedAt: row.archived_at, teams: [] });
+      rounds.get(key).teams.push({ ...row.data, finalRank: row.final_rank });
+    });
+    return [...rounds.values()]
+      .map(r => ({ ...r, teams: r.teams.sort((a, b) => a.finalRank - b.finalRank) }))
+      .sort((a, b) => new Date(b.archivedAt) - new Date(a.archivedAt));
+  }
+
+  async renderAdminArchives() {
+    const body = document.getElementById('table-admin-archives');
+    if (!body) return;
+
+    const archives = await this.getArchives();
+    body.innerHTML = '';
+
+    if (archives.length === 0) {
+      body.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align: center; padding: 1.5rem; color: var(--text-muted);">
+            Nenhuma base salva ainda. Use "Salvar Base e Reiniciar Contagem" para arquivar a rodada atual.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    archives.forEach(archive => {
+      const top = archive.teams[0];
+      const topName = top ? (top.registrationType === 'group' ? (top.groupName || top.name) : top.name) : '--';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${this.formatRound(archive.roundId === 'inicial' ? null : archive.roundId)}</strong></td>
+        <td>${new Date(archive.archivedAt).toLocaleString('pt-BR')}</td>
+        <td><strong style="color: var(--univc-emerald-dark);">${archive.teams.length}</strong></td>
+        <td>${topName} ${top ? `(${top.score || 0} PTS)` : ''}</td>
+        <td style="text-align: center;">
+          <div style="display: flex; gap: 0.5rem; justify-content: center;">
+            <button class="btn-secondary btn-archive-csv" style="padding: 0.4rem 0.7rem; font-size: 0.8rem;" title="Exportar CSV"><i class="fa-solid fa-file-csv"></i> CSV</button>
+            <button class="btn-secondary btn-archive-json" style="padding: 0.4rem 0.7rem; font-size: 0.8rem;" title="Exportar JSON"><i class="fa-solid fa-database"></i> JSON</button>
+          </div>
+        </td>
+      `;
+
+      const stamp = archive.archivedAt.slice(0, 19).replace(/[:T]/g, '-');
+      tr.querySelector('.btn-archive-csv').addEventListener('click', () => {
+        sounds.playSuccess();
+        this.downloadFile(this.buildCSV(archive.teams), `base_salva_univc_${stamp}.csv`, 'text/csv;charset=utf-8;');
+      });
+      tr.querySelector('.btn-archive-json').addEventListener('click', () => {
+        sounds.playSuccess();
+        const payload = { round: archive.roundId, archivedAt: archive.archivedAt, total: archive.teams.length, participants: archive.teams };
+        this.downloadFile(JSON.stringify(payload, null, 2), `base_salva_univc_${stamp}.json`, 'application/json');
+      });
+
+      body.appendChild(tr);
+    });
   }
 
   render() {
     this.renderBadge();
     this.updateHeaderBadges();
     this.renderStationsGrid();
-    this.renderSentenceInventory();
-    this.renderSentenceAssembly();
-    this.checkAndRenderUnlockedDome();
     this.renderLeaderboard();
   }
 }

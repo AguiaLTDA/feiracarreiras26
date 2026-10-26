@@ -9,31 +9,24 @@ Plataforma oficial gamificada de ranking e trilha de desafios profissionais insp
 ## 🌟 Funcionalidades Oficiais da Aplicação
 
 - **1. Cadastro do Estudante & Crachá Virtual (`#cadastro`)**: Registro individual de alunos (Nome, WhatsApp, Escola de Origem e Curso de Preferência) com emissão de Crachá de Protagonista e QR Code.
-- **2. 10 Estações Físicas do Campus (`#estacoes`)**:
-  - **Auditório Principal** (Publicidade, Adm & Contábeis) → Fragmento: `"CASO"`
-  - **NPJ - Práticas Jurídicas** (Direito) → Fragmento: `"EU"`
-  - **Clínica-Escola** (Psicologia & Fisioterapia) → Fragmento: `"NÃO"`
-  - **Lab de Semiologia** (Enfermagem & Farmácia) → Fragmento: `"OS"`
-  - **Lab de Radiologia** (Radiologia / Imagem) → Fragmento: `"VEJA"`
-  - **Clínica Odontológica** (Odontologia) → Fragmento: `"MAIS"`
-  - **Quadra Poliesportiva** (Educação Física) → Fragmento: `"BOM"`
-  - **Lab Tech** (Análise e Dev. de Sistemas — ADS) → Fragmento: `"DIA"`
-  - **Clínica Veterinária** (Med. Veterinária & Agronomia) → Fragmento: `"BOA"`
-  - **Lab de Engenharias** (Engenharias & Arquitetura) → Fragmento: `"NOITE"`
-- **3. O Desafio da Cúpula (`#senha`)**: Montagem da frase histórica de Truman para destravar a porta de saída da cúpula:
-  > *"CASO EU NÃO OS VEJA MAIS: BOM DIA E BOA NOITE!"*
-- **4. Ranking Gamificado Ao Vivo & Modo Telão (`#ranking`)**:
+- **2. 10 Estações Físicas do Campus (`#estacoes`)**: Auditório Principal, NPJ, Clínica-Escola, Lab de Semiologia, Lab de Radiologia, Clínica Odontológica, Quadra Poliesportiva, Lab Tech, Clínica Veterinária e Lab de Engenharias. Cada acerto soma pontos base + bônus de tempo + combo.
+- **3. Ranking Gamificado Ao Vivo & Modo Telão (`#ranking`)**:
   - Pódio em destaque (1º, 2º e 3º lugares).
   - Tabela de classificação em tempo real conectada ao Supabase Realtime.
   - Filtros por escola e busca por aluno/curso.
   - **Modo Telão Auditório**: Visão em tela cheia de alto contraste para projeção no auditório principal.
-- **5. Painel de Administração (`#admin`)**:
+- **4. Painel de Administração (`#admin`)**:
   - Acesso protegido por senha (`admin2026`).
   - Edição de dados de alunos (Nome, WhatsApp, Escola, Curso e Pontos).
   - Link direto para conversar pelo WhatsApp com um clique (`https://wa.me/...`).
   - Exclusão de registros inválidos ou de teste.
   - **Exportação para Excel / CSV** para o time de marketing pós-evento.
-  - **Limpeza de Base (Pré-Evento)** para zerar os testes antes de abrir os portões no dia 12.
+  - **Exportação da Base Completa (JSON)** com todos os campos e a posição no ranking.
+  - **Salvar Base e Reiniciar Contagem**: arquiva a rodada atual (participantes + ranqueamento final) em `teams_archive`, baixa um CSV de segurança, zera o ranking e inicia uma nova rodada. Os celulares dos participantes descartam o crachá da rodada anterior automaticamente.
+  - **Bases Salvas**: lista das rodadas arquivadas, cada uma exportável em CSV ou JSON.
+  - **Limpeza de Base (Pré-Evento)** para zerar os testes antes de abrir os portões.
+
+> **Banco de dados:** execute `schema.sql` no SQL Editor do Supabase (cria `app_settings` e `teams_archive`). Para reiniciar a base pelo SQL, execute `reset_rodada.sql` — ele salva a base atual em `teams_archive` antes de zerar.
 
 ---
 

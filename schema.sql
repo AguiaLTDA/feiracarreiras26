@@ -90,3 +90,55 @@ BEGIN
         ALTER PUBLICATION supabase_realtime ADD TABLE public.teams;
     END IF;
 END $$;
+
+-- ==============================================================================
+-- 8. RODADAS: controle de contagem/ranqueamento e bases salvas (arquivo)
+-- ==============================================================================
+
+-- Configurações globais (rodada vigente). Quando a rodada muda, os celulares
+-- dos participantes descartam o crachá da rodada anterior automaticamente.
+CREATE TABLE IF NOT EXISTS public.app_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+INSERT INTO public.app_settings (key, value)
+VALUES ('current_round', 'inicial')
+ON CONFLICT (key) DO NOTHING;
+
+-- Bases salvas: cada linha é um participante de uma rodada encerrada, com sua posição final
+CREATE TABLE IF NOT EXISTS public.teams_archive (
+    archive_id BIGSERIAL PRIMARY KEY,
+    round_id TEXT NOT NULL,
+    archived_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('utc'::text, now()),
+    final_rank INTEGER,
+    team_id TEXT,
+    data JSONB NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_teams_archive_round ON public.teams_archive (archived_at DESC, final_rank);
+
+ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.teams_archive ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Permitir leitura pública das configurações" ON public.app_settings;
+DROP POLICY IF EXISTS "Permitir inserção pública das configurações" ON public.app_settings;
+DROP POLICY IF EXISTS "Permitir atualização pública das configurações" ON public.app_settings;
+DROP POLICY IF EXISTS "Permitir leitura pública das bases salvas" ON public.teams_archive;
+DROP POLICY IF EXISTS "Permitir inserção pública das bases salvas" ON public.teams_archive;
+
+CREATE POLICY "Permitir leitura pública das configurações"
+ON public.app_settings FOR SELECT USING (true);
+
+CREATE POLICY "Permitir inserção pública das configurações"
+ON public.app_settings FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Permitir atualização pública das configurações"
+ON public.app_settings FOR UPDATE USING (true);
+
+CREATE POLICY "Permitir leitura pública das bases salvas"
+ON public.teams_archive FOR SELECT USING (true);
+
+CREATE POLICY "Permitir inserção pública das bases salvas"
+ON public.teams_archive FOR INSERT WITH CHECK (true);
